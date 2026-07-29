@@ -9,10 +9,14 @@ import time
 # Constants
 PRODUCT_NAME = "PMD2"
 PRODUCT_STRING = "ElmorLabs PMD2"
+PRODUCT_STRING_PMD2X = "ElmorLabs PMD2X"
 VENDOR_ID = 0xEE
 PRODUCT_ID = 0x15
+PRODUCT_ID_PMD2X = 0x17
 FIRMWARE_VERSION = 0x00 # Pre-rel firmware
 SENSOR_POWER_NUM = 10
+SENSOR_POWER_NUM_PMD2X = 16
+SENSOR_TS_NUM = 2
 
 # Structures
 class VendorDataStruct(Structure):
@@ -50,6 +54,28 @@ class SensorStruct(Structure):
         ('MbPower', c_uint16),
         ('TotalPower', c_uint16),
         ('Ocp', c_uint8 * SENSOR_POWER_NUM)
+    ]
+
+    def __str__(self):
+        vin = ', '.join(str(v) for v in self.Vin)
+        ts = ', '.join(str(t) for t in self.Ts)
+        power_readings = ', '.join(str(p) for p in self.PowerReadings)
+        fans = ', '.join(str(f) for f in self.Fans)
+        return f'Vdd:{self.Vref}\nTchip: {self.FanExt}\nPowerReadings: {power_readings}'
+
+class SensorStruct_PMD2X(Structure):
+
+    _pack_ = 1
+    _fields_ = [
+        ('Vdd', c_uint16),
+        ('Tchip', c_int16),
+        ('Ts', c_int16 * SENSOR_TS_NUM),
+        ('PowerReadings', PowerSensor * SENSOR_POWER_NUM_PMD2X),
+        ('EpsPower', c_uint16),
+        ('PciePower', c_uint16),
+        ('MbPower', c_uint16),
+        ('TotalPower', c_uint16),
+        ('Ocp', c_uint8 * SENSOR_POWER_NUM_PMD2X)
     ]
 
     def __str__(self):
@@ -113,10 +139,9 @@ if __name__ == '__main__':
     # Read product string
     print("Reading welcome string...")
     ser.dtr = True
-    #ser.write(UART_CMD.CMD_WELCOME.toByte())
     buffer = ser.read(len(PRODUCT_STRING)+1)
     print(str(buffer))
-    assert buffer == PRODUCT_STRING.encode('ascii') + b'\x00'
+    #assert ((buffer == PRODUCT_STRING.encode('ascii') + b'\x00') or (buffer == PRODUCT_STRING_PMD2X.encode('ascii') + b'\x00'))
     print(f"Result: {buffer.decode('ascii')}\n")
 
     # Check if firmware version is compatible
@@ -126,7 +151,7 @@ if __name__ == '__main__':
     assert len(buffer) == 3
     vendor_data = VendorDataStruct.from_buffer_copy(buffer)
     print(f"Result: {vendor_data}\n")
-    assert vendor_data.VendorId == VENDOR_ID and vendor_data.ProductId == PRODUCT_ID
+    assert vendor_data.VendorId == VENDOR_ID and (vendor_data.ProductId == PRODUCT_ID or vendor_data.ProductId == PRODUCT_ID_PMD2X)
 
     if(vendor_data.FwVersion != FIRMWARE_VERSION):
         print(f"Warning: Firmware version {hex(vendor_data.FwVersion)} may not be compatible with this script (for version {hex(FIRMWARE_VERSION)}).\n")
@@ -135,14 +160,20 @@ if __name__ == '__main__':
 
     ser.read_all()
 
+    if (vendor_data.ProductId == PRODUCT_ID_PMD2X):
+        print("PMD2X detected. Using PMD2X sensor struct.\n")
+        SENSOR_POWER_NUM = SENSOR_POWER_NUM_PMD2X
+        sensor_struct = SensorStruct_PMD2X()
+    else:
+        print("PMD2 detected. Using PMD2 sensor struct.\n")
+        sensor_struct = SensorStruct()    
+
     num_samples = 500
 
     while(True):
         
         #print("Reading sensor values...")
         
-        sensor_struct = SensorStruct()
-
         voltage_array = np.zeros((SENSOR_POWER_NUM, num_samples))
         current_array = np.zeros((SENSOR_POWER_NUM, num_samples))
         power_array = np.zeros((SENSOR_POWER_NUM, num_samples))
@@ -153,13 +184,22 @@ if __name__ == '__main__':
             while not success:
                 try:
                     ser.write(UART_CMD.CMD_READ_SENSOR_VALUES.toByte())
-                    buffer = ser.read(sizeof(SensorStruct))
-                    if len(buffer) == sizeof(SensorStruct):
-                        success = True
+                    if vendor_data.ProductId == PRODUCT_ID_PMD2X:
+                        buffer = ser.read(sizeof(SensorStruct_PMD2X))
+                        if len(buffer) == sizeof(SensorStruct_PMD2X):
+                            success = True
+                    else:
+                        buffer = ser.read(sizeof(SensorStruct))
+                        if len(buffer) == sizeof(SensorStruct):
+                            success = True
                 except:
                     time.sleep(0.1)
 
-            sensor_struct_single = SensorStruct.from_buffer_copy(buffer)
+            if vendor_data.ProductId == PRODUCT_ID_PMD2X:
+                sensor_struct_single = SensorStruct_PMD2X.from_buffer_copy(buffer)
+            else:
+                sensor_struct_single = SensorStruct.from_buffer_copy(buffer)
+
             for j in range(SENSOR_POWER_NUM):
                 voltage_array[j][i] = sensor_struct_single.PowerReadings[j].Voltage
                 current_array[j][i] = sensor_struct_single.PowerReadings[j].Current
@@ -184,16 +224,24 @@ if __name__ == '__main__':
         print(f'{"Power"}\t\t{power_readings[5].Power/1000:.3f}\t{power_readings[6].Power/1000:.3f}')
         print("\n")
 
-        print("\t\tPCIE1\tPCIE2\tPCIE3\tHPWR1")
-        print(f'{"Voltage"}\t\t{power_readings[7].Voltage/1000:.3f}\t{power_readings[8].Voltage/1000:.3f}\t{power_readings[9].Voltage/1000:.3f}\t{power_readings[4].Voltage/1000:.3f}')
-        print(f'{"Current"}\t\t{power_readings[7].Current/1000:.3f}\t{power_readings[8].Current/1000:.3f}\t{power_readings[9].Current/1000:.3f}\t{power_readings[4].Current/1000:.3f}')
-        print(f'{"Power"}\t\t{power_readings[7].Power/1000:.3f}\t{power_readings[8].Power/1000:.3f}\t{power_readings[9].Power/1000:.3f}\t{power_readings[4].Power/1000:.3f}')
-        print("\n\n")
+        if vendor_data.ProductId == PRODUCT_ID:
+            print("\t\tPCIE1\tPCIE2\tPCIE3\tHPWR")
+            print(f'{"Voltage"}\t\t{power_readings[7].Voltage/1000:.3f}\t{power_readings[8].Voltage/1000:.3f}\t{power_readings[9].Voltage/1000:.3f}\t{power_readings[4].Voltage/1000:.3f}')
+            print(f'{"Current"}\t\t{power_readings[7].Current/1000:.3f}\t{power_readings[8].Current/1000:.3f}\t{power_readings[9].Current/1000:.3f}\t{power_readings[4].Current/1000:.3f}')
+            print(f'{"Power"}\t\t{power_readings[7].Power/1000:.3f}\t{power_readings[8].Power/1000:.3f}\t{power_readings[9].Power/1000:.3f}\t{power_readings[4].Power/1000:.3f}')
+        else:
 
-        #power_cpu = (power_readings[0].Power + power_readings[1].Power)/1000
-        #power_gpu = (power_readings[6].Power + power_readings[7].Power + power_readings[8].Power + power_readings[9].Power + power_readings[10].Power)/1000
-        #power_mb = (power_readings[2].Power + power_readings[3].Power + power_readings[4].Power + power_readings[5].Power)/1000
-        #power_system = power_cpu + power_gpu + power_mb
+            # calculate HPWR sums
+            hpwr_voltage = (power_readings[10].Voltage + power_readings[11].Voltage + power_readings[12].Voltage + power_readings[13].Voltage + power_readings[14].Voltage + power_readings[15].Voltage) / 6
+            hpwr_current = (power_readings[10].Current + power_readings[11].Current + power_readings[12].Current + power_readings[13].Current + power_readings[14].Current + power_readings[15].Current) / 6
+            hpwr_power = (power_readings[10].Power + power_readings[11].Power + power_readings[12].Power + power_readings[13].Power + power_readings[14].Power + power_readings[15].Power) / 6
+
+            print("\t\tPCIE1\tPCIE2\tPCIE3\tHPWR\tHPWR_W1\tHPWR_W2\tHPWR_W3\tHPWR_W4\tHPWR_W5\tHPWR_W6")
+            print(f'{"Voltage"}\t\t{power_readings[7].Voltage/1000:.3f}\t{power_readings[8].Voltage/1000:.3f}\t{power_readings[9].Voltage/1000:.3f}\t{hpwr_voltage/1000:.3f}\t{power_readings[10].Voltage/1000:.3f}\t{power_readings[11].Voltage/1000:.3f}\t{power_readings[12].Voltage/1000:.3f}\t{power_readings[13].Voltage/1000:.3f}\t{power_readings[14].Voltage/1000:.3f}\t{power_readings[15].Voltage/1000:.3f}')
+            print(f'{"Current"}\t\t{power_readings[7].Current/1000:.3f}\t{power_readings[8].Current/1000:.3f}\t{power_readings[9].Current/1000:.3f}\t{hpwr_current/1000:.3f}\t{power_readings[10].Current/1000:.3f}\t{power_readings[11].Current/1000:.3f}\t{power_readings[12].Current/1000:.3f}\t{power_readings[13].Current/1000:.3f}\t{power_readings[14].Current/1000:.3f}\t{power_readings[15].Current/1000:.3f}')
+            print(f'{"Power"}\t\t{power_readings[7].Power/1000:.3f}\t{power_readings[8].Power/1000:.3f}\t{power_readings[9].Power/1000:.3f}\t{hpwr_power/1000:.3f}\t{power_readings[10].Power/1000:.3f}\t{power_readings[11].Power/1000:.3f}\t{power_readings[12].Power/1000:.3f}\t{power_readings[13].Power/1000:.3f}\t{power_readings[14].Power/1000:.3f}\t{power_readings[15].Power/1000:.3f}')
+
+        print("\n\n")
 
         time.sleep(0.5)
 
