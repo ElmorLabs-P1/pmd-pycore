@@ -14,3 +14,8 @@ values, and prints averaged voltage/current/power readings per rail to the conso
 
 There is no packaging, test suite, or CLI argument handling yet — the script is run directly
 and prompts for a serial port selection if multiple matching devices are found.
+
+## Related repositories
+
+- [PMD2-FW (pmd2x branch)](https://github.com/ElmorLabs/PMD2-FW/tree/pmd2x) — PMD2X firmware,
+  useful reference for the UART command set and sensor data structures used here.
