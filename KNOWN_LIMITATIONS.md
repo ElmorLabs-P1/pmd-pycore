@@ -63,6 +63,46 @@ PMD2X unit's `FwVersion: 0x0` discussed above -- they're different product
 variants with independent version counters, not sequential revisions of the
 same thing.
 
+## PMD-USB: no firmware source, raw-ADC/calibration path unimplemented
+
+Unlike PMD2/PMD2X, there is no public PMD-USB firmware source to check
+against. This was ported from and verified against reference
+implementations -- [PMDLogger](https://github.com/ElmorLabs/PMDLogger)'s C#
+`PMD_USB_Device.cs`, and the Python sample scripts
+[pmd-usb-serial-interface-fast](https://github.com/ElmorLabs/pmd-usb-serial-interface-fast)
+and [elmorlabs-pmd-usb-serial-interface](https://github.com/bjorntas/elmorlabs-pmd-usb-serial-interface)
+-- plus a real device: identity (`CMD_WELCOME`/`CMD_READ_ID`) and
+`CMD_READ_SENSOR_VALUES`'s plain `int16*0.01V`/`*0.1A` scaling both decode
+correctly (idle readings ~0.17V/0A, consistent with a board not wired into
+a live PSU rail).
+
+`CMD_READ_ADC` -- the raw 12-bit ADC path with per-channel calibration
+offsets, used for PMD-USB's higher-speed continuous-TX mode -- is not
+implemented. It needs `CMD_READ_CONFIG`'s calibration struct to produce
+calibrated readings, which (like PMD2's `CMD_READ_CONFIG`) hasn't been
+pinned down here.
+
+`PMDLogger` also has a `PMD_Device.cs` for an original PMD variant that
+connects over I2C via an EVC2 USB-to-I2C bridge rather than USB-serial --
+a different physical interface entirely, not something `pyserial` can talk
+to and out of scope for this library.
+
+## Linux support: code-reviewed, not hardware-tested
+
+Nothing in `pmd_pycore` is Windows-specific: port discovery uses
+`serial.tools.list_ports.comports()` and checks `p.hwid` for
+`VID:PID=...`, which pyserial's Linux backend (`list_ports_linux.py`)
+produces via the same shared `usb_info()` formatting Windows uses -- not
+a Windows-only string. Port names are always treated as opaque strings
+passed straight to `serial.Serial()`, with no `COMx`-shaped parsing
+anywhere. `rtscts`/`dsrdtr`/`.dtr` are standard pyserial attributes backed
+by termios on POSIX, not Windows-only workarounds.
+
+That said, this has only been reviewed, not run against real hardware on
+Linux -- all verification in this repo so far has been on Windows. If you
+hit something that doesn't work on Linux, it's worth filing, not assuming
+away.
+
 ## Examples only talk to one device at a time
 
 `get_pmd_ports()`/`find_pmd_devices()` enumerate all connected PMD2/PMD2X

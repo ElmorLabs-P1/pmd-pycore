@@ -79,8 +79,8 @@ See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) for what's deliberately out of 
   falling back to PMD-USB, print its identity, and read sensor values once (for PMD2/PMD2X:
   per-rail readings, firmware-computed aggregate power, chip health, and PMD2X's 12VHPWR
   connector temperatures).
-- `examples/read_sensors.py` — a PMD2/PMD2X polling/averaging loop that mirrors the original
-  sample script.
+- `examples/read_sensors.py` — a polling/averaging loop, refreshing in place, for whichever
+  device family is connected (same PMD2/PMD2X-first-then-PMD-USB detection as `quickstart.py`).
 
 ## Status
 
