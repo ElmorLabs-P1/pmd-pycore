@@ -1,4 +1,4 @@
-# pmd2_pycore/core/__init__.py
+# pmd_pycore/core/__init__.py
 
 from .serial_io import (
     get_pmd_ports,

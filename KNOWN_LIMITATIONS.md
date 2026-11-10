@@ -3,9 +3,9 @@
 Things this library doesn't do yet, and why, so nobody has to re-derive this
 from commit history.
 
-## Only four commands are implemented
+## Only four PMD2/PMD2X commands are implemented
 
-`pmd2_pycore` implements `CMD_WELCOME`, `CMD_READ_VENDOR_DATA`, `CMD_READ_UID`,
+`pmd_pycore` implements `CMD_WELCOME`, `CMD_READ_VENDOR_DATA`, `CMD_READ_UID`,
 and `CMD_READ_SENSOR_VALUES` -- the device's read-only telemetry commands.
 Per [PMD2-FW's `pmd2.h`](https://github.com/ElmorLabs/PMD2-FW/blob/pmd2x/Core/Inc/pmd2.h)
 and its USB command dispatch

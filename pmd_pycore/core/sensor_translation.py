@@ -4,7 +4,7 @@ Translate raw PMD2/PMD2X sensor structures into human-readable readings.
 
 from typing import Dict, Optional, Union
 
-from pmd2_pycore.core.structures import (
+from pmd_pycore.core.structures import (
     SensorStructPMD2,
     SensorStructPMD2X,
     PMD2_PRODUCT_ID,

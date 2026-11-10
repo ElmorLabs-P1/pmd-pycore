@@ -1,8 +1,10 @@
-# pmd2-pycore
+# pmd-pycore
 
-Python interface for ElmorLabs PMD2/PMD2X power measurement devices.
+Python interface for ElmorLabs PMD power measurement devices (PMD2, PMD2X, PMD-USB).
 
-More information: https://elmorlabs.com/product/elmorlabs-pmd2x-power-measurement-device-2x
+More information:
+- https://elmorlabs.com/product/elmorlabs-pmd2x-power-measurement-device-2x
+- https://elmorlabs.com/product/elmorlabs-pmd-usb-power-measurement-device-with-usb/
 
 ## Pre-requisites
 - Python >= 3.11, with pyserial (and numpy for the example scripts)
@@ -17,7 +19,7 @@ pip install -e .
 ## Usage
 
 ```python
-from pmd2_pycore.core import (
+from pmd_pycore.core import (
     get_pmd_ports,
     read_welcome_string,
     read_device,
@@ -53,8 +55,9 @@ See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) for what's deliberately out of 
 
 This repository is under active development at
 [ElmorLabs-P1/pmd-pycore](https://github.com/ElmorLabs-P1/pmd-pycore). It provides an installable
-`pmd2_pycore` package (serial discovery, UART command helpers, PMD2/PMD2X sensor structures, and
-readable-unit translation), a test suite, and CI for tests and tagged releases.
+`pmd_pycore` package (serial discovery, UART command helpers, sensor structures, and
+readable-unit translation for the supported devices), a test suite, and CI for tests and tagged
+releases.
 
 ## Related repositories
 

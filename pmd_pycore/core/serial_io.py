@@ -2,7 +2,7 @@
 Serial communication helpers for ElmorLabs PMD2/PMD2X devices.
 
 Example:
-    >>> from pmd2_pycore.core import get_pmd_ports, read_device, read_sensors
+    >>> from pmd_pycore.core import get_pmd_ports, read_device, read_sensors
     >>> ports = get_pmd_ports()
     >>> if ports:
     >>>     import serial
@@ -22,7 +22,7 @@ import serial.tools.list_ports
 from ctypes import sizeof
 from typing import List, Dict, Optional, Union
 
-from pmd2_pycore.core.structures import (
+from pmd_pycore.core.structures import (
     VendorDataStruct,
     SensorStructPMD2,
     SensorStructPMD2X,
@@ -35,7 +35,7 @@ from pmd2_pycore.core.structures import (
 )
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logger = logging.getLogger("pmd2_pycore.core.serial_io")
+logger = logging.getLogger("pmd_pycore.core.serial_io")
 logger.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
 
 if not logger.handlers:

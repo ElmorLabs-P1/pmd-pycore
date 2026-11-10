@@ -3,7 +3,7 @@
 from ctypes import Structure, sizeof
 from unittest.mock import patch, MagicMock, Mock
 
-from pmd2_pycore.core import (
+from pmd_pycore.core import (
     get_pmd_ports,
     find_pmd_devices,
     read_uart,
@@ -54,7 +54,7 @@ def test_imports():
 # -----------------------
 # Test device discovery
 # -----------------------
-@patch("pmd2_pycore.core.serial_io.serial.tools.list_ports.comports")
+@patch("pmd_pycore.core.serial_io.serial.tools.list_ports.comports")
 def test_get_pmd_ports_filters_by_vid_pid(mock_comports):
     match = Mock(device="COM3", hwid="USB VID:PID=0483:5740 SER=1")
     no_match = Mock(device="COM4", hwid="USB VID:PID=1234:5678 SER=2")
@@ -65,7 +65,7 @@ def test_get_pmd_ports_filters_by_vid_pid(mock_comports):
     assert ports == [{"port": "COM3"}]
 
 
-@patch("pmd2_pycore.core.serial_io.serial.tools.list_ports.comports")
+@patch("pmd_pycore.core.serial_io.serial.tools.list_ports.comports")
 def test_get_pmd_ports_empty(mock_comports):
     mock_comports.return_value = []
     assert get_pmd_ports() == []

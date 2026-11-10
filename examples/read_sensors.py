@@ -8,7 +8,7 @@ import time
 import numpy as np
 import serial
 
-from pmd2_pycore.core import (
+from pmd_pycore.core import (
     get_pmd_ports,
     read_device,
     read_sensors,
