@@ -2,9 +2,19 @@
 
 Python interface for ElmorLabs PMD power measurement devices (PMD2, PMD2X, PMD-USB).
 
-More information:
-- https://elmorlabs.com/product/elmorlabs-pmd2x-power-measurement-device-2x
-- https://elmorlabs.com/product/elmorlabs-pmd-usb-power-measurement-device-with-usb/
+## Supported devices
+
+- **[PMD2X](https://elmorlabs.com/product/elmorlabs-pmd2x-power-measurement-device-2x/)**
+  (current product) -- measures voltage/current/power on CPU, GPU, and motherboard power
+  cables: 2x EPS, 3x PCIe, 1x ATX24, plus per-wire monitoring on a 12VHPWR (PCIe 5.0/ATX 3.0)
+  connector. OLED display, USB-C to a PC for logging. STM32 USB-serial interface.
+- **[PMD2](https://elmorlabs.com/product/elmorlabs-pmd2/)** *(discontinued, superseded by
+  PMD2X)* -- the non-X predecessor: same EPS/PCIe/ATX24 rail set and 12VHPWR connector, without
+  the per-wire 12VHPWR breakdown or the connector thermistors PMD2X added. Same USB-serial
+  interface.
+- **[PMD-USB](https://elmorlabs.com/product/elmorlabs-pmd-usb-power-measurement-device-with-usb/)**
+  *(discontinued, superseded by PMD2X)* -- an older, simpler device: 4 channels (PCIE1, PCIE2,
+  EPS1, EPS2) over a CH340 USB-serial bridge, no motherboard/ATX24 rail or 12VHPWR monitoring.
 
 ## Pre-requisites
 - Python >= 3.11, with pyserial (and numpy for the example scripts)
