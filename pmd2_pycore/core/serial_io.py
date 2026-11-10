@@ -129,10 +129,11 @@ def read_uart(ser: serial.Serial, cmd: PMD_CMD, size: int) -> Optional[bytes]:
     ser.reset_input_buffer()
     ser.write(cmd.toByte())
     # Without a short gap the device occasionally hasn't queued its response
-    # yet when we read (measured ~0.5% of reads at 0ms vs. 0/5000 at 2ms
-    # across 5 trials) -- cheap insurance against a read that otherwise
-    # blocks for the full port timeout before coming back empty.
-    time.sleep(0.002)
+    # yet when we read. 2ms was 0/5000 on a PMD2X but 2-3% failures on a
+    # PMD2 (different unit/firmware); 5ms was 0/5000 on both -- cheap
+    # insurance against a read that otherwise blocks for the full port
+    # timeout before coming back empty.
+    time.sleep(0.005)
     buffer = ser.read(size)
     if len(buffer) != size:
         logger.warning("UART read incomplete: expected %d, got %d bytes", size, len(buffer))

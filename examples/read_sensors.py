@@ -22,8 +22,10 @@ from pmd2_pycore.core import (
 # Number of sensor reads averaged into each displayed update.
 NUM_SAMPLES = 20
 
-# Target time between displayed updates. Each read_sensors() call takes
-# well under 1ms once connected, so this is the dominant cost per cycle.
+# Target time between displayed updates. read_uart()'s 5ms inter-command
+# delay dominates per-sample cost, so NUM_SAMPLES * 5ms (~100ms) alone is
+# already close to this budget -- actual cycles land around 110-125ms, not
+# exactly 100ms. This is treated as a target to approach, not a hard cap.
 UPDATE_INTERVAL_S = 0.1
 
 CLEAR_SCREEN = "\x1b[2J\x1b[H"
