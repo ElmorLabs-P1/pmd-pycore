@@ -19,9 +19,12 @@ from pmd2_pycore.core import (
     PMD2X_PRODUCT_ID,
 )
 
-# Still enough samples to smooth out noise, but a cycle no longer takes
-# 500 * ~50ms (read_uart's inter-command delay) = 25+ seconds.
-NUM_SAMPLES = 50
+# Number of sensor reads averaged into each displayed update.
+NUM_SAMPLES = 20
+
+# Target time between displayed updates. Each read_sensors() call takes
+# well under 1ms once connected, so this is the dominant cost per cycle.
+UPDATE_INTERVAL_S = 0.1
 
 CLEAR_SCREEN = "\x1b[2J\x1b[H"
 
@@ -79,6 +82,7 @@ def main():
         is_pmd2x = product_id == PMD2X_PRODUCT_ID
 
         while True:
+            cycle_start = time.monotonic()
             rail_samples = []
             aggregate_samples = []
             chip_samples = []
@@ -121,19 +125,20 @@ def main():
             lines.append("")
 
             lines.append("--- Device health ---")
-            lines.append(f'Supply (Vdd):    {averaged_chip["vdd"]:>8.3f} V')
-            lines.append(f'Chip temp:       {averaged_chip["tchip"]:>8.1f} C')
+            lines.append(f'{"Supply (Vdd):":<17}{averaged_chip["vdd"]:>8.3f} V')
+            lines.append(f'{"Chip temp:":<17}{averaged_chip["tchip"]:>8.1f} C')
             if is_pmd2x:
                 def fmt_temp(samples, key):
                     values = [s[key] for s in samples if s[key] is not None]
-                    return f"{np.mean(values):.1f} C" if values else "not connected"
+                    return f"{np.mean(values):>8.1f} C" if values else f"{'n/c':>8} C"
 
-                lines.append(f'12VHPWR in:      {fmt_temp(hpwr_temp_samples, "ts_in"):>8}')
-                lines.append(f'12VHPWR out:     {fmt_temp(hpwr_temp_samples, "ts_out"):>8}')
+                lines.append(f'{"12VHPWR in:":<17}{fmt_temp(hpwr_temp_samples, "ts_in")}')
+                lines.append(f'{"12VHPWR out:":<17}{fmt_temp(hpwr_temp_samples, "ts_out")}')
 
             print(CLEAR_SCREEN + "\n".join(lines), flush=True)
 
-            time.sleep(0.5)
+            elapsed = time.monotonic() - cycle_start
+            time.sleep(max(0.0, UPDATE_INTERVAL_S - elapsed))
     finally:
         ser.close()
 

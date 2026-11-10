@@ -92,14 +92,14 @@ def print_aggregate_power(aggregates: Dict[str, float]) -> None:
 
 def print_device_health(chip: Dict[str, float], hpwr_temps: Optional[Dict[str, Optional[float]]]) -> None:
     def fmt_temp(value: Optional[float]) -> str:
-        return f"{value:.1f} C" if value is not None else "not connected"
+        return f"{value:>8.1f} C" if value is not None else f"{'n/c':>8} C"
 
     print("--- Device health ---")
-    print(f'Supply (Vdd):    {chip["vdd"]:>8.3f} V')
-    print(f'Chip temp:       {chip["tchip"]:>8.1f} C')
+    print(f'{"Supply (Vdd):":<17}{chip["vdd"]:>8.3f} V')
+    print(f'{"Chip temp:":<17}{chip["tchip"]:>8.1f} C')
     if hpwr_temps is not None:
-        print(f'12VHPWR in:      {fmt_temp(hpwr_temps["ts_in"]):>8}')
-        print(f'12VHPWR out:     {fmt_temp(hpwr_temps["ts_out"]):>8}')
+        print(f'{"12VHPWR in:":<17}{fmt_temp(hpwr_temps["ts_in"])}')
+        print(f'{"12VHPWR out:":<17}{fmt_temp(hpwr_temps["ts_out"])}')
 
 
 def main() -> None:
