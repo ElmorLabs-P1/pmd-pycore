@@ -43,12 +43,25 @@ aggregate power) was confirmed against this device and matches the current
 branch, but the config struct does not -- see above. A device running
 different firmware may need re-verification.
 
-## No PMD2 (non-X) hardware has been tested
+## PMD2 (non-X) hardware: verified, with one open question
 
-Everything here has been verified against a live PMD2X. The PMD2 (non-X)
-code paths -- the 10-channel `SensorStructPMD2`, `PMD2_CHANNELS` mapping, no
-`Ts[]`/HPWR-wire fields -- are implemented per the firmware source but have
-not been run against real PMD2 hardware.
+A real PMD2 (ProductId `0x15`, `FwVersion: 0x2`) has been tested: identity,
+the 10-channel `SensorStructPMD2` layout, `PMD2_CHANNELS` mapping, and
+aggregate power all decode correctly, and `quickstart.py`/`read_sensors.py`
+both run cleanly against it (correctly skipping the PMD2X-only 12VHPWR
+section).
+
+`Tchip` reads a consistent raw `0` on this device across 20+ reads over 4+
+seconds -- not a translation bug (the raw wire value is 0, confirmed by
+reading the struct directly), but unclear whether that firmware revision
+doesn't populate chip temperature on PMD2, or whether it needs a longer
+warm-up than tested here. `Vdd` reads a plausible ~3.28V on the same device,
+so this looks specific to `Tchip`.
+
+Note this PMD2 unit's `FwVersion: 0x2` is not the same firmware line as the
+PMD2X unit's `FwVersion: 0x0` discussed above -- they're different product
+variants with independent version counters, not sequential revisions of the
+same thing.
 
 ## Examples only talk to one device at a time
 
