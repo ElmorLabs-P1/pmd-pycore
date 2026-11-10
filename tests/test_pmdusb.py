@@ -12,7 +12,7 @@ from pmd_pycore.core import (
     translate_pmdusb_sensors,
     translate_pmdusb_aggregate_power,
     PMDUSBIdStruct,
-    SensorValuesPMDUSB,
+    PMDUSBSensorStruct,
     PMDUSB_CMD,
     PMDUSB_VENDOR_ID,
     PMDUSB_PRODUCT_ID,
@@ -29,10 +29,10 @@ def test_imports():
     assert callable(translate_pmdusb_aggregate_power)
 
     assert isinstance(PMDUSBIdStruct(), Structure)
-    assert isinstance(SensorValuesPMDUSB(), Structure)
+    assert isinstance(PMDUSBSensorStruct(), Structure)
 
 
-@patch("pmd_pycore.core.pmdusb_serial_io.serial.tools.list_ports.comports")
+@patch("pmd_pycore.core.pmdusb.serial.tools.list_ports.comports")
 def test_get_pmdusb_ports_filters_by_vid_pid(mock_comports):
     match = Mock(device="COM22", hwid="USB VID:PID=1A86:7523 SER=1")
     no_match = Mock(device="COM4", hwid="USB VID:PID=0483:5740 SER=2")
@@ -69,7 +69,7 @@ def test_read_pmdusb_id_wrong_vendor_returns_none():
 
 
 def test_read_pmdusb_sensors():
-    sensors = SensorValuesPMDUSB()
+    sensors = PMDUSBSensorStruct()
     sensors.Channels[0].Voltage = 1200
     sensors.Channels[0].Current = 50
     ser = MagicMock()
@@ -77,7 +77,7 @@ def test_read_pmdusb_sensors():
 
     result = read_pmdusb_sensors(ser)
 
-    assert isinstance(result, SensorValuesPMDUSB)
+    assert isinstance(result, PMDUSBSensorStruct)
     assert result.Channels[0].Voltage == 1200
 
 
@@ -89,7 +89,7 @@ def test_read_pmdusb_sensors_incomplete_returns_none():
 
 
 def test_translate_pmdusb_sensors():
-    sensors = SensorValuesPMDUSB()
+    sensors = PMDUSBSensorStruct()
     sensors.Channels[0].Voltage = 1200  # 12.00 V
     sensors.Channels[0].Current = 50   # 5.0 A
 
@@ -100,7 +100,7 @@ def test_translate_pmdusb_sensors():
 
 
 def test_translate_pmdusb_aggregate_power():
-    sensors = SensorValuesPMDUSB()
+    sensors = PMDUSBSensorStruct()
     sensors.Channels[0].Voltage = 1200  # PCIE1: 12.0 V
     sensors.Channels[0].Current = 10    # 1.0 A -> 12.0 W
     sensors.Channels[1].Voltage = 1200  # PCIE2: 12.0 V

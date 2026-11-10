@@ -27,28 +27,29 @@ pip install -e .
 
 ```python
 from pmd_pycore.core import (
-    get_pmd_ports,
-    read_welcome_string,
-    read_device,
-    read_uid,
-    read_sensors,
-    translate_sensor_struct,
+    get_pmd2_ports,
+    read_pmd2_welcome_string,
+    read_pmd2_device,
+    read_pmd2_uid,
+    read_pmd2_sensors,
+    translate_pmd2_sensor_struct,
 )
 import serial
 
-port = get_pmd_ports()[0]["port"]
+port = get_pmd2_ports()[0]["port"]
 ser = serial.Serial(port, 115200, timeout=1, rtscts=False, dsrdtr=False)
 
-device_info = read_device(ser)
-sensors = read_sensors(ser, device_info["ProductId"])
-readings = translate_sensor_struct(sensors, device_info["ProductId"])
+device_info = read_pmd2_device(ser)
+sensors = read_pmd2_sensors(ser, device_info["ProductId"])
+readings = translate_pmd2_sensor_struct(sensors, device_info["ProductId"])
 print(readings["12V"])  # {'voltage': 12.0, 'current': 1.0, 'power': 12.0}
 ```
 
 Currently implemented are the device's read-only commands:
-`CMD_WELCOME` (`read_welcome_string`), `CMD_READ_VENDOR_DATA` (`read_device`), `CMD_READ_UID`
-(`read_uid`), and `CMD_READ_SENSOR_VALUES` (`read_sensors`). Writing/action commands (continuous
-TX, config read/write, reset, bootloader) are not implemented.
+`CMD_WELCOME` (`read_pmd2_welcome_string`), `CMD_READ_VENDOR_DATA` (`read_pmd2_device`),
+`CMD_READ_UID` (`read_pmd2_uid`), and `CMD_READ_SENSOR_VALUES` (`read_pmd2_sensors`).
+Writing/action commands (continuous TX, config read/write, reset, bootloader) are not
+implemented.
 
 See `examples/read_sensors.py` — a polling/averaging loop that mirrors the original sample script.
 

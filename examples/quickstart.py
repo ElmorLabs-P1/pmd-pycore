@@ -10,14 +10,14 @@ from typing import Dict, Iterator, Optional
 import serial
 
 from pmd_pycore.core import (
-    get_pmd_ports,
-    read_device,
-    read_uid,
-    read_sensors,
-    translate_sensor_struct,
-    translate_aggregate_power,
-    translate_chip_sensors,
-    translate_hpwr_temperatures,
+    get_pmd2_ports,
+    read_pmd2_device,
+    read_pmd2_uid,
+    read_pmd2_sensors,
+    translate_pmd2_sensor_struct,
+    translate_pmd2_aggregate_power,
+    translate_pmd2_chip_sensors,
+    translate_pmd2x_hpwr_temperatures,
     PMD2_PRODUCT_ID,
     PMD2X_PRODUCT_ID,
     get_pmdusb_ports,
@@ -43,7 +43,7 @@ def connect_pmd(port: str) -> Iterator[serial.Serial]:
             ser.dtr = True
             # The device pushes an unsolicited welcome string on DTR assert, but
             # the push can arrive after this point rather than before it. Give it
-            # a moment to land, then flush -- read_uart() also flushes before each
+            # a moment to land, then flush -- read_pmd2_uart() also flushes before each
             # command, so a late push can never corrupt the next real response.
             time.sleep(0.1)
             ser.reset_input_buffer()
@@ -101,7 +101,7 @@ def print_pmd_device_health(chip: Dict[str, float], hpwr_temps: Optional[Dict[st
 
 def run_pmd(port: str) -> None:
     with connect_pmd(port) as ser:
-        device_info = read_device(ser)
+        device_info = read_pmd2_device(ser)
         if device_info is None:
             raise SystemExit("Failed to read device info -- is this a PMD2/PMD2X device?")
 
@@ -109,16 +109,16 @@ def run_pmd(port: str) -> None:
         if product_id not in PRODUCT_NAMES:
             raise SystemExit(f"Unrecognized ProductId {hex(product_id)} -- not a PMD2/PMD2X device?")
 
-        print_pmd_device_info(device_info, read_uid(ser))
+        print_pmd_device_info(device_info, read_pmd2_uid(ser))
 
-        sensors = read_sensors(ser, product_id)
+        sensors = read_pmd2_sensors(ser, product_id)
         if sensors is None:
             raise SystemExit("Failed to read sensor values.")
 
-        print_rail_readings(translate_sensor_struct(sensors, product_id))
-        print_aggregate_power(translate_aggregate_power(sensors))
-        hpwr_temps = translate_hpwr_temperatures(sensors) if product_id == PMD2X_PRODUCT_ID else None
-        print_pmd_device_health(translate_chip_sensors(sensors), hpwr_temps)
+        print_rail_readings(translate_pmd2_sensor_struct(sensors, product_id))
+        print_aggregate_power(translate_pmd2_aggregate_power(sensors))
+        hpwr_temps = translate_pmd2x_hpwr_temperatures(sensors) if product_id == PMD2X_PRODUCT_ID else None
+        print_pmd_device_health(translate_pmd2_chip_sensors(sensors), hpwr_temps)
 
 
 # --- PMD-USB ---
@@ -162,7 +162,7 @@ def run_pmdusb(port: str) -> None:
 # --- Entry point ---
 
 def main() -> None:
-    pmd_ports = get_pmd_ports()
+    pmd_ports = get_pmd2_ports()
     if pmd_ports:
         if len(pmd_ports) > 1:
             print(f"Found {len(pmd_ports)} PMD2/PMD2X devices, using the first: {pmd_ports[0]['port']}")

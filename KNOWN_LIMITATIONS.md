@@ -46,7 +46,7 @@ different firmware may need re-verification.
 ## PMD2 (non-X) hardware: verified, with one open question
 
 A real PMD2 (ProductId `0x15`, `FwVersion: 0x2`) has been tested: identity,
-the 10-channel `SensorStructPMD2` layout, `PMD2_CHANNELS` mapping, and
+the 10-channel `PMD2SensorStruct` layout, `PMD2_CHANNELS` mapping, and
 aggregate power all decode correctly, and `quickstart.py`/`read_sensors.py`
 both run cleanly against it (correctly skipping the PMD2X-only 12VHPWR
 section).
@@ -116,7 +116,7 @@ away.
 
 ## Examples only talk to one device at a time
 
-`get_pmd_ports()`/`find_pmd_devices()` enumerate all connected PMD2/PMD2X
+`get_pmd2_ports()`/`find_pmd2_devices()` enumerate all connected PMD2/PMD2X
 units, and the library has no single-device assumption baked in -- open one
 `serial.Serial` per port and call the read functions independently. Neither
 `examples/quickstart.py` nor `examples/read_sensors.py` do this, though:

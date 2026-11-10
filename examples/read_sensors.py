@@ -9,13 +9,13 @@ import numpy as np
 import serial
 
 from pmd_pycore.core import (
-    get_pmd_ports,
-    read_device,
-    read_sensors,
-    translate_sensor_struct,
-    translate_aggregate_power,
-    translate_chip_sensors,
-    translate_hpwr_temperatures,
+    get_pmd2_ports,
+    read_pmd2_device,
+    read_pmd2_sensors,
+    translate_pmd2_sensor_struct,
+    translate_pmd2_aggregate_power,
+    translate_pmd2_chip_sensors,
+    translate_pmd2x_hpwr_temperatures,
     PMD2X_PRODUCT_ID,
     get_pmdusb_ports,
     read_pmdusb_id,
@@ -27,7 +27,7 @@ from pmd_pycore.core import (
 # Number of sensor reads averaged into each displayed update.
 NUM_SAMPLES = 20
 
-# Target time between displayed updates. On PMD2/PMD2X, read_uart()'s 5ms
+# Target time between displayed updates. On PMD2/PMD2X, read_pmd2_uart()'s 5ms
 # inter-command delay dominates per-sample cost, so NUM_SAMPLES * 5ms
 # (~100ms) alone is already close to this budget -- actual cycles land
 # around 110-125ms there, not exactly 100ms. PMD-USB's 2ms delay leaves more
@@ -65,13 +65,13 @@ def run_pmd(port):
         ser.dtr = True
         # The device pushes an unsolicited welcome string on DTR assert, but it
         # can arrive after this point rather than before it. Give it a moment to
-        # land, then flush -- read_uart() also flushes before each command, so a
+        # land, then flush -- read_pmd2_uart() also flushes before each command, so a
         # late push can never corrupt the next real response.
         time.sleep(0.1)
         ser.reset_input_buffer()
 
         print("Reading vendor data...")
-        device_info = read_device(ser)
+        device_info = read_pmd2_device(ser)
         if device_info is None:
             print("Failed to read vendor data from device.")
             return
@@ -92,14 +92,14 @@ def run_pmd(port):
                 sensors = None
                 while sensors is None:
                     try:
-                        sensors = read_sensors(ser, product_id)
+                        sensors = read_pmd2_sensors(ser, product_id)
                     except serial.SerialException:
                         time.sleep(0.1)
-                rail_samples.append(translate_sensor_struct(sensors, product_id))
-                aggregate_samples.append(translate_aggregate_power(sensors))
-                chip_samples.append(translate_chip_sensors(sensors))
+                rail_samples.append(translate_pmd2_sensor_struct(sensors, product_id))
+                aggregate_samples.append(translate_pmd2_aggregate_power(sensors))
+                chip_samples.append(translate_pmd2_chip_sensors(sensors))
                 if is_pmd2x:
-                    hpwr_temp_samples.append(translate_hpwr_temperatures(sensors))
+                    hpwr_temp_samples.append(translate_pmd2x_hpwr_temperatures(sensors))
 
             rail_names = rail_samples[0].keys()
             averaged_rails = {
@@ -196,7 +196,7 @@ def run_pmdusb(port):
 
 def main():
     print("\nFinding potential PMD2/PMD2X Serial Ports...\n")
-    pmd_ports = get_pmd_ports()
+    pmd_ports = get_pmd2_ports()
     for i, p in enumerate(pmd_ports):
         print(f"{i} - {p['port']}")
     print()
