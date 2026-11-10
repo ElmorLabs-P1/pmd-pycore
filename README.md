@@ -1,19 +1,43 @@
-# ElmorLabs PMD2/PMD2X Python sample code
+# pmd2-pycore
+
+Python interface for ElmorLabs PMD2/PMD2X power measurement devices.
 
 More information: https://elmorlabs.com/product/elmorlabs-pmd2x-power-measurement-device-2x
 
 ## Pre-requisites
-- Python 3.13 with pyserial, numpy and matplotlib
+- Python >= 3.11, with pyserial (and numpy for the example script)
+
+## Install
+
+```
+pip install -r requirements.txt
+pip install -e .
+```
+
+## Usage
+
+```python
+from pmd2_pycore.core import get_pmd_ports, read_device, read_sensors, translate_sensor_struct
+import serial
+
+port = get_pmd_ports()[0]["port"]
+ser = serial.Serial(port, 115200, timeout=1, rtscts=False, dsrdtr=False)
+
+device_info = read_device(ser)
+sensors = read_sensors(ser, device_info["ProductId"])
+readings = translate_sensor_struct(sensors, device_info["ProductId"])
+print(readings["12V"])  # {'voltage': 12.0, 'current': 1.0, 'power': 12.0}
+```
+
+See `examples/read_sensors.py` for a full polling/averaging loop that mirrors what the original
+sample script did.
 
 ## Status
 
 This repository is under active development at
-[ElmorLabs-P1/pmd-pycore](https://github.com/ElmorLabs-P1/pmd-pycore). It contains a single
-sample script, `pmd2-msm.py`, which connects to a PMD2 or PMD2X device over serial, polls sensor
-values, and prints averaged voltage/current/power readings per rail to the console.
-
-There is no packaging, test suite, or CLI argument handling yet — the script is run directly
-and prompts for a serial port selection if multiple matching devices are found.
+[ElmorLabs-P1/pmd-pycore](https://github.com/ElmorLabs-P1/pmd-pycore). It provides an installable
+`pmd2_pycore` package (serial discovery, UART command helpers, PMD2/PMD2X sensor structures, and
+readable-unit translation), a test suite, and CI for tests and tagged releases.
 
 ## Related repositories
 
