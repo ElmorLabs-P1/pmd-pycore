@@ -1,5 +1,6 @@
 """
-Connect to a PMD2/PMD2X device and print averaged rail readings in a loop.
+Connect to a PMD2/PMD2X device and print averaged rail/aggregate/health
+readings in a loop, refreshing in place.
 """
 
 import time
@@ -12,9 +13,21 @@ from pmd2_pycore.core import (
     read_device,
     read_sensors,
     translate_sensor_struct,
+    translate_aggregate_power,
+    translate_chip_sensors,
+    translate_hpwr_temperatures,
+    PMD2X_PRODUCT_ID,
 )
 
-NUM_SAMPLES = 500
+# Still enough samples to smooth out noise, but a cycle no longer takes
+# 500 * ~50ms (read_uart's inter-command delay) = 25+ seconds.
+NUM_SAMPLES = 50
+
+CLEAR_SCREEN = "\x1b[2J\x1b[H"
+
+
+def _average_dicts(dicts, fields):
+    return {field: float(np.mean([d[field] for d in dicts])) for field in fields}
 
 
 def main():
@@ -60,11 +73,17 @@ def main():
             print("Failed to read vendor data from device.")
             return
         print(f"Result: {device_info}\n")
+        time.sleep(1)
 
         product_id = device_info["ProductId"]
+        is_pmd2x = product_id == PMD2X_PRODUCT_ID
 
         while True:
-            samples = []
+            rail_samples = []
+            aggregate_samples = []
+            chip_samples = []
+            hpwr_temp_samples = []
+
             for _ in range(NUM_SAMPLES):
                 sensors = None
                 while sensors is None:
@@ -72,24 +91,47 @@ def main():
                         sensors = read_sensors(ser, product_id)
                     except serial.SerialException:
                         time.sleep(0.1)
-                samples.append(translate_sensor_struct(sensors, product_id))
+                rail_samples.append(translate_sensor_struct(sensors, product_id))
+                aggregate_samples.append(translate_aggregate_power(sensors))
+                chip_samples.append(translate_chip_sensors(sensors))
+                if is_pmd2x:
+                    hpwr_temp_samples.append(translate_hpwr_temperatures(sensors))
 
-            rail_names = samples[0].keys()
-            averaged = {
-                rail: {
-                    field: float(np.mean([s[rail][field] for s in samples]))
-                    for field in ("voltage", "current", "power")
-                }
+            rail_names = rail_samples[0].keys()
+            averaged_rails = {
+                rail: _average_dicts([s[rail] for s in rail_samples], ("voltage", "current", "power"))
                 for rail in rail_names
             }
+            averaged_aggregates = _average_dicts(aggregate_samples, ("eps", "pcie", "mb", "total"))
+            averaged_chip = _average_dicts(chip_samples, ("vdd", "tchip"))
 
-            print(f'{"Rail":<10}{"Voltage":>10}{"Current":>10}{"Power":>10}')
-            for rail, reading in averaged.items():
-                print(
+            lines = [f'{"Rail":<10}{"Voltage":>10}{"Current":>10}{"Power":>10}']
+            for rail, reading in averaged_rails.items():
+                lines.append(
                     f'{rail:<10}{reading["voltage"]:>10.3f}'
                     f'{reading["current"]:>10.3f}{reading["power"]:>10.3f}'
                 )
-            print()
+            lines.append("")
+
+            lines.append("--- Aggregate power ---")
+            lines.append(f'EPS (CPU):       {averaged_aggregates["eps"]:>8.3f} W')
+            lines.append(f'PCIe (GPU):      {averaged_aggregates["pcie"]:>8.3f} W')
+            lines.append(f'Motherboard:     {averaged_aggregates["mb"]:>8.3f} W')
+            lines.append(f'Total:           {averaged_aggregates["total"]:>8.3f} W')
+            lines.append("")
+
+            lines.append("--- Device health ---")
+            lines.append(f'Supply (Vdd):    {averaged_chip["vdd"]:>8.3f} V')
+            lines.append(f'Chip temp:       {averaged_chip["tchip"]:>8.1f} C')
+            if is_pmd2x:
+                def fmt_temp(samples, key):
+                    values = [s[key] for s in samples if s[key] is not None]
+                    return f"{np.mean(values):.1f} C" if values else "not connected"
+
+                lines.append(f'12VHPWR in:      {fmt_temp(hpwr_temp_samples, "ts_in"):>8}')
+                lines.append(f'12VHPWR out:     {fmt_temp(hpwr_temp_samples, "ts_out"):>8}')
+
+            print(CLEAR_SCREEN + "\n".join(lines), flush=True)
 
             time.sleep(0.5)
     finally:
@@ -97,4 +139,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nStopped.")
