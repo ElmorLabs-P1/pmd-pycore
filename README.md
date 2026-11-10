@@ -8,6 +8,11 @@ More information:
 
 ## Pre-requisites
 - Python >= 3.11, with pyserial (and numpy for the example scripts)
+- PMD-USB uses a CH340 USB-serial chip. Linux has an in-kernel driver for it (binds
+  automatically, nothing to install). **Windows does not ship one** -- if the device shows up
+  in Device Manager but never gets a COM port, install the CH340/CH341 driver from the chip
+  manufacturer's site ([wch-ic.com](https://www.wch-ic.com/), search "CH340"/"CH341") and
+  replug. PMD2/PMD2X use an STM32 VCP instead and don't need a separate driver on either OS.
 
 ## Install
 
