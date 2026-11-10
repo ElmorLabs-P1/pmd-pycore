@@ -1,7 +1,6 @@
 """
-Minimal example: connect to the first PMD2/PMD2X device found, print its
-identity, and read sensors once -- per-rail readings, firmware-computed
-aggregate power, chip health, and (PMD2X only) 12VHPWR connector temperatures.
+Minimal example: connect to the first supported device found -- trying
+PMD2/PMD2X first, then PMD-USB -- print its identity, and read sensors once.
 """
 
 import time
@@ -21,22 +20,19 @@ from pmd_pycore.core import (
     translate_hpwr_temperatures,
     PMD2_PRODUCT_ID,
     PMD2X_PRODUCT_ID,
+    get_pmdusb_ports,
+    read_pmdusb_id,
+    read_pmdusb_sensors,
+    translate_pmdusb_sensors,
 )
 
 PRODUCT_NAMES = {PMD2_PRODUCT_ID: "PMD2", PMD2X_PRODUCT_ID: "PMD2X"}
 
 
+# --- PMD2 / PMD2X ---
+
 @contextmanager
-def connect() -> Iterator[serial.Serial]:
-    ports = get_pmd_ports()
-    if not ports:
-        raise SystemExit("No PMD2/PMD2X device found.")
-    if len(ports) > 1:
-        print(f"Found {len(ports)} devices, using the first: {ports[0]['port']}")
-
-    port = ports[0]["port"]
-    print(f"Connecting to {port}...")
-
+def connect_pmd(port: str) -> Iterator[serial.Serial]:
     try:
         # rtscts/dsrdtr disabled: the device uses DTR as its "is a host listening"
         # signal, so pyserial's automatic flow-control handling must stay out of the way.
@@ -59,7 +55,7 @@ def connect() -> Iterator[serial.Serial]:
         )
 
 
-def print_device_info(device_info: Dict[str, int], uid: Optional[str]) -> None:
+def print_pmd_device_info(device_info: Dict[str, int], uid: Optional[str]) -> None:
     product_name = PRODUCT_NAMES.get(device_info["ProductId"], "unknown")
     print("--- Device ---")
     print(f"Product:    {product_name}")
@@ -90,7 +86,7 @@ def print_aggregate_power(aggregates: Dict[str, float]) -> None:
     print()
 
 
-def print_device_health(chip: Dict[str, float], hpwr_temps: Optional[Dict[str, Optional[float]]]) -> None:
+def print_pmd_device_health(chip: Dict[str, float], hpwr_temps: Optional[Dict[str, Optional[float]]]) -> None:
     def fmt_temp(value: Optional[float]) -> str:
         return f"{value:>8.1f} C" if value is not None else f"{'n/c':>8} C"
 
@@ -102,8 +98,8 @@ def print_device_health(chip: Dict[str, float], hpwr_temps: Optional[Dict[str, O
         print(f'{"12VHPWR out:":<17}{fmt_temp(hpwr_temps["ts_out"])}')
 
 
-def main() -> None:
-    with connect() as ser:
+def run_pmd(port: str) -> None:
+    with connect_pmd(port) as ser:
         device_info = read_device(ser)
         if device_info is None:
             raise SystemExit("Failed to read device info -- is this a PMD2/PMD2X device?")
@@ -112,7 +108,7 @@ def main() -> None:
         if product_id not in PRODUCT_NAMES:
             raise SystemExit(f"Unrecognized ProductId {hex(product_id)} -- not a PMD2/PMD2X device?")
 
-        print_device_info(device_info, read_uid(ser))
+        print_pmd_device_info(device_info, read_uid(ser))
 
         sensors = read_sensors(ser, product_id)
         if sensors is None:
@@ -121,7 +117,63 @@ def main() -> None:
         print_rail_readings(translate_sensor_struct(sensors, product_id))
         print_aggregate_power(translate_aggregate_power(sensors))
         hpwr_temps = translate_hpwr_temperatures(sensors) if product_id == PMD2X_PRODUCT_ID else None
-        print_device_health(translate_chip_sensors(sensors), hpwr_temps)
+        print_pmd_device_health(translate_chip_sensors(sensors), hpwr_temps)
+
+
+# --- PMD-USB ---
+
+def print_pmdusb_device_info(device_info: Dict[str, int]) -> None:
+    print("--- Device ---")
+    print("Product:    PMD-USB")
+    print(f"Vendor ID:  {hex(device_info['VendorId'])}")
+    print(f"Product ID: {hex(device_info['ProductId'])}")
+    print(f"Firmware:   {hex(device_info['FwVersion'])}")
+    print()
+
+
+def run_pmdusb(port: str) -> None:
+    try:
+        ser = serial.Serial(port, 115200, timeout=1, write_timeout=1)
+    except serial.SerialException as e:
+        raise SystemExit(f"Failed to open {port}: {e}")
+
+    try:
+        device_info = read_pmdusb_id(ser)
+        if device_info is None:
+            raise SystemExit("Failed to read device info -- is this a PMD-USB device?")
+        print_pmdusb_device_info(device_info)
+
+        sensors = read_pmdusb_sensors(ser)
+        if sensors is None:
+            raise SystemExit("Failed to read sensor values.")
+
+        print_rail_readings(translate_pmdusb_sensors(sensors))
+    finally:
+        ser.close()
+
+
+# --- Entry point ---
+
+def main() -> None:
+    pmd_ports = get_pmd_ports()
+    if pmd_ports:
+        if len(pmd_ports) > 1:
+            print(f"Found {len(pmd_ports)} PMD2/PMD2X devices, using the first: {pmd_ports[0]['port']}")
+        port = pmd_ports[0]["port"]
+        print(f"Connecting to {port} (PMD2/PMD2X)...")
+        run_pmd(port)
+        return
+
+    pmdusb_ports = get_pmdusb_ports()
+    if pmdusb_ports:
+        if len(pmdusb_ports) > 1:
+            print(f"Found {len(pmdusb_ports)} PMD-USB devices, using the first: {pmdusb_ports[0]['port']}")
+        port = pmdusb_ports[0]["port"]
+        print(f"Connecting to {port} (PMD-USB)...")
+        run_pmdusb(port)
+        return
+
+    raise SystemExit("No PMD2/PMD2X or PMD-USB device found.")
 
 
 if __name__ == "__main__":

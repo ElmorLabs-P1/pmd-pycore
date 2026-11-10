@@ -35,6 +35,25 @@ from .structures import (
     PMD2X_TS_OUT,
     PMD2X_TS_NOT_CONNECTED,
 )
+from .pmdusb_serial_io import (
+    get_pmdusb_ports,
+    read_pmdusb_uart,
+    read_pmdusb_welcome_string,
+    read_pmdusb_id,
+    read_pmdusb_sensors,
+)
+from .pmdusb_sensor_translation import translate_pmdusb_sensors
+from .pmdusb_structures import (
+    PMDUSBIdStruct,
+    PMDUSBChannelValues,
+    SensorValuesPMDUSB,
+    PMDUSB_CMD,
+    PMDUSB_VENDOR_ID,
+    PMDUSB_PRODUCT_ID,
+    PMDUSB_PRODUCT_STRING,
+    PMDUSB_CHANNEL_NUM,
+    PMDUSB_CHANNELS,
+)
 
 __all__ = [
     # serial_io
@@ -69,4 +88,22 @@ __all__ = [
     "PMD2X_TS_IN",
     "PMD2X_TS_OUT",
     "PMD2X_TS_NOT_CONNECTED",
+    # pmdusb_serial_io
+    "get_pmdusb_ports",
+    "read_pmdusb_uart",
+    "read_pmdusb_welcome_string",
+    "read_pmdusb_id",
+    "read_pmdusb_sensors",
+    # pmdusb_sensor_translation
+    "translate_pmdusb_sensors",
+    # pmdusb_structures
+    "PMDUSBIdStruct",
+    "PMDUSBChannelValues",
+    "SensorValuesPMDUSB",
+    "PMDUSB_CMD",
+    "PMDUSB_VENDOR_ID",
+    "PMDUSB_PRODUCT_ID",
+    "PMDUSB_PRODUCT_STRING",
+    "PMDUSB_CHANNEL_NUM",
+    "PMDUSB_CHANNELS",
 ]
