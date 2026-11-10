@@ -3,9 +3,9 @@ Connect to the first supported device found -- trying PMD2/PMD2X first, then
 PMD-USB -- and print averaged readings in a loop, refreshing in place.
 """
 
+import statistics
 import time
 
-import numpy as np
 import serial
 
 from pmd_pycore.core import (
@@ -38,7 +38,7 @@ CLEAR_SCREEN = "\x1b[2J\x1b[H"
 
 
 def _average_dicts(dicts, fields):
-    return {field: float(np.mean([d[field] for d in dicts])) for field in fields}
+    return {field: statistics.mean(d[field] for d in dicts) for field in fields}
 
 
 def _rail_lines(averaged_rails):
@@ -124,7 +124,7 @@ def run_pmd(port):
             if is_pmd2x:
                 def fmt_temp(samples, key):
                     values = [s[key] for s in samples if s[key] is not None]
-                    return f"{np.mean(values):>8.1f} C" if values else f"{'n/c':>8} C"
+                    return f"{statistics.mean(values):>8.1f} C" if values else f"{'n/c':>8} C"
 
                 lines.append(f'{"12VHPWR in:":<17}{fmt_temp(hpwr_temp_samples, "ts_in")}')
                 lines.append(f'{"12VHPWR out:":<17}{fmt_temp(hpwr_temp_samples, "ts_out")}')

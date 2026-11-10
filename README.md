@@ -24,9 +24,18 @@ motherboard power cables, with an OLED display and USB connection to a PC for lo
 ## Install
 
 ```
+pip install pmd-pycore
+```
+
+Or from a checkout:
+
+```
 pip install -r requirements.txt
 pip install -e .
 ```
+
+This also installs the example scripts (see [Examples](#examples) below) as part of the package,
+runnable with `python -m pmd_pycore.examples.quickstart`.
 
 ## Usage
 
@@ -58,7 +67,8 @@ Currently implemented are the device's read-only commands:
 Writing/action commands (continuous TX, config read/write, reset, bootloader) are not
 implemented.
 
-See `examples/read_sensors.py` — a polling/averaging loop that mirrors the original sample script.
+See `python -m pmd_pycore.examples.read_sensors` (below) — a polling/averaging loop that mirrors
+the original sample script.
 
 ### PMD-USB
 
@@ -97,12 +107,16 @@ See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) for what's deliberately out of 
 
 ## Examples
 
-- `examples/quickstart.py` — connect to the first device found, trying PMD2/PMD2X first and
-  falling back to PMD-USB, print its identity, and read sensor values once (for PMD2/PMD2X:
-  per-rail readings, firmware-computed aggregate power, chip health, and PMD2X's 12VHPWR
-  connector temperatures).
-- `examples/read_sensors.py` — a polling/averaging loop, refreshing in place, for whichever
-  device family is connected (same PMD2/PMD2X-first-then-PMD-USB detection as `quickstart.py`).
+Both examples ship as part of the installed package -- run them with `python -m` after
+`pip install pmd-pycore`, no checkout needed.
+
+- `python -m pmd_pycore.examples.quickstart` — connect to the first device found, trying
+  PMD2/PMD2X first and falling back to PMD-USB, print its identity, and read sensor values once
+  (for PMD2/PMD2X: per-rail readings, firmware-computed aggregate power, chip health, and
+  PMD2X's 12VHPWR connector temperatures).
+- `python -m pmd_pycore.examples.read_sensors` — a polling/averaging loop, refreshing in place,
+  for whichever device family is connected (same PMD2/PMD2X-first-then-PMD-USB detection as
+  `quickstart`).
 
 ## Status
 

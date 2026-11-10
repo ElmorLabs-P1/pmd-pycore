@@ -134,7 +134,7 @@ work, it's worth filing, not assuming away.
 `get_pmd2_ports()`/`find_pmd2_devices()` enumerate all connected PMD2/PMD2X
 units, and the library has no single-device assumption baked in -- open one
 `serial.Serial` per port and call the read functions independently. Neither
-`examples/quickstart.py` nor `examples/read_sensors.py` do this, though:
-they pick the first device found (`read_sensors.py` prompts for a port index
-if more than one is detected, but still only monitors that one device for
-the rest of the run).
+`pmd_pycore.examples.quickstart` nor `pmd_pycore.examples.read_sensors` do
+this, though: they pick the first device found (`read_sensors` prompts for
+a port index if more than one is detected, but still only monitors that
+one device for the rest of the run).
