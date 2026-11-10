@@ -41,6 +41,20 @@ aggregate power) was confirmed against this device and matches the current
 branch, but the config struct does not -- see above. A device running
 different firmware may need re-verification.
 
+## Aggregate power was wrong under load, fixed
+
+`translate_pmd2_aggregate_power()` divided `EpsPower`/`PciePower`/`MbPower`/
+`TotalPower` by 1000, treating them like `PowerReadings[i].Power`
+(milliwatts). They're not -- firmware computes them as
+`div10(div10(div10(sum_mW)))`, i.e. already in whole watts, confirmed
+against a live, *loaded* PMD2X: raw `MbPower` matched the rail-sum in watts
+almost exactly, not the rail-sum in milliwatts. The bug went unnoticed
+through all earlier verification in this repo because every prior test was
+against an idle/unpowered device, where 0 / 1000 is still 0 -- the error
+was invisible until real load exposed it (values read as ~1000x too small,
+e.g. "0.278 W" total instead of "278 W"). Fixed to read the fields as
+whole watts directly.
+
 ## PMD2 (non-X) hardware: verified, with one open question
 
 A real PMD2 (ProductId `0x15`, `FwVersion: 0x2`) has been tested: identity,

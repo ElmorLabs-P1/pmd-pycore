@@ -365,12 +365,17 @@ def translate_pmd2_aggregate_power(
         - pcie: PCIe/GPU power (PCIE1-3, plus HPWR on PMD2X)
         - mb: motherboard power (ATX24 rails: 12V/5V/5VSB/3.3V)
         - total: sum of all of the above
+
+    Unlike PowerReadings[i].Power (milliwatts), these fields are already in
+    whole watts -- firmware computes them as div10(div10(div10(sum_mW))),
+    i.e. sum_mW / 1000. Confirmed against a live, loaded PMD2X: raw
+    MbPower matched the rail-sum-in-watts, not rail-sum-in-milliwatts.
     """
     return {
-        "eps": sensors.EpsPower / 1000,
-        "pcie": sensors.PciePower / 1000,
-        "mb": sensors.MbPower / 1000,
-        "total": sensors.TotalPower / 1000,
+        "eps": float(sensors.EpsPower),
+        "pcie": float(sensors.PciePower),
+        "mb": float(sensors.MbPower),
+        "total": float(sensors.TotalPower),
     }
 
 

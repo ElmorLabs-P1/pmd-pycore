@@ -4,6 +4,7 @@ PMD-USB -- and print averaged readings in a loop, refreshing in place.
 """
 
 import statistics
+import sys
 import time
 
 import serial
@@ -35,6 +36,29 @@ NUM_SAMPLES = 20
 UPDATE_INTERVAL_S = 0.1
 
 CLEAR_SCREEN = "\x1b[2J\x1b[H"
+
+
+def _enable_windows_ansi() -> None:
+    """Turn on ANSI escape processing for this console, if needed.
+
+    Windows Terminal and PowerShell 7+ enable this by default, but plain
+    cmd.exe and older consoles don't -- without it, CLEAR_SCREEN's escape
+    bytes print as literal garbage instead of clearing the screen, so the
+    display just scrolls forever rather than refreshing in place.
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        kernel32 = ctypes.windll.kernel32
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+        handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+        mode = ctypes.c_uint32()
+        if kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            kernel32.SetConsoleMode(handle, mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+    except Exception:
+        pass  # Not a console we can configure (e.g. redirected to a file); harmless either way.
 
 
 def _average_dicts(dicts, fields):
@@ -195,6 +219,8 @@ def run_pmdusb(port):
 # --- Entry point ---
 
 def main():
+    _enable_windows_ansi()
+
     print("\nFinding potential PMD2/PMD2X Serial Ports...\n")
     pmd_ports = get_pmd2_ports()
     for i, p in enumerate(pmd_ports):

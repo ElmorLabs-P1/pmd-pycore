@@ -211,11 +211,14 @@ def test_translate_pmd2_sensor_struct_pmd2x_reads_hpwr_and_wires():
 
 
 def test_translate_pmd2_aggregate_power():
+    # EpsPower/PciePower/MbPower/TotalPower are already in whole watts
+    # (firmware divides the millwatt sum by 1000 before storing), unlike
+    # PowerReadings[i].Power which is in milliwatts.
     sensors = PMD2XSensorStruct()
-    sensors.EpsPower = 50000
-    sensors.PciePower = 30000
-    sensors.MbPower = 20000
-    sensors.TotalPower = 60000
+    sensors.EpsPower = 50
+    sensors.PciePower = 30
+    sensors.MbPower = 20
+    sensors.TotalPower = 60
 
     result = translate_pmd2_aggregate_power(sensors)
 
