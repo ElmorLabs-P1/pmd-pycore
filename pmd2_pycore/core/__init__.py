@@ -9,6 +9,9 @@ from .serial_io import (
 )
 from .sensor_translation import (
     translate_sensor_struct,
+    translate_aggregate_power,
+    translate_chip_sensors,
+    translate_hpwr_temperatures,
     PMD2_CHANNELS,
     PMD2X_CHANNELS,
 )
@@ -26,6 +29,9 @@ from .structures import (
     PMD2_SENSOR_POWER_NUM,
     PMD2X_SENSOR_POWER_NUM,
     PMD2X_SENSOR_TS_NUM,
+    PMD2X_TS_IN,
+    PMD2X_TS_OUT,
+    PMD2X_TS_NOT_CONNECTED,
 )
 
 __all__ = [
@@ -37,6 +43,9 @@ __all__ = [
     "read_sensors",
     # sensor_translation
     "translate_sensor_struct",
+    "translate_aggregate_power",
+    "translate_chip_sensors",
+    "translate_hpwr_temperatures",
     "PMD2_CHANNELS",
     "PMD2X_CHANNELS",
     # structures
@@ -53,4 +62,7 @@ __all__ = [
     "PMD2_SENSOR_POWER_NUM",
     "PMD2X_SENSOR_POWER_NUM",
     "PMD2X_SENSOR_TS_NUM",
+    "PMD2X_TS_IN",
+    "PMD2X_TS_OUT",
+    "PMD2X_TS_NOT_CONNECTED",
 ]

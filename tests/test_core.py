@@ -10,6 +10,9 @@ from pmd2_pycore.core import (
     read_device,
     read_sensors,
     translate_sensor_struct,
+    translate_aggregate_power,
+    translate_chip_sensors,
+    translate_hpwr_temperatures,
     VendorDataStruct,
     PowerSensor,
     SensorStructPMD2,
@@ -18,6 +21,9 @@ from pmd2_pycore.core import (
     VENDOR_ID,
     PMD2_PRODUCT_ID,
     PMD2X_PRODUCT_ID,
+    PMD2X_TS_IN,
+    PMD2X_TS_OUT,
+    PMD2X_TS_NOT_CONNECTED,
 )
 
 
@@ -31,6 +37,9 @@ def test_imports():
     assert callable(read_device)
     assert callable(read_sensors)
     assert callable(translate_sensor_struct)
+    assert callable(translate_aggregate_power)
+    assert callable(translate_chip_sensors)
+    assert callable(translate_hpwr_temperatures)
 
     assert isinstance(VendorDataStruct(), Structure)
     assert isinstance(PowerSensor(), Structure)
@@ -146,13 +155,50 @@ def test_translate_sensor_struct_pmd2():
     assert "HPWR_W1" not in result
 
 
-def test_translate_sensor_struct_pmd2x_averages_hpwr_wires():
+def test_translate_sensor_struct_pmd2x_reads_hpwr_and_wires():
     sensors = SensorStructPMD2X()
-    for i in range(10, 16):
-        sensors.PowerReadings[i].Voltage = 12000
-        sensors.PowerReadings[i].Current = 500
-        sensors.PowerReadings[i].Power = 6000
+    # HPWR1 (index 4) is computed on-device from the six wires -- the host
+    # reads it directly rather than re-deriving it from the wire channels.
+    sensors.PowerReadings[4].Voltage = 12000
+    sensors.PowerReadings[4].Current = 3000
+    sensors.PowerReadings[4].Power = 36000
+    sensors.PowerReadings[10].Voltage = 12000
+    sensors.PowerReadings[10].Current = 500
+    sensors.PowerReadings[10].Power = 6000
 
     result = translate_sensor_struct(sensors, PMD2X_PRODUCT_ID)
 
-    assert result["HPWR"] == {"voltage": 12.0, "current": 0.5, "power": 6.0}
+    assert result["HPWR"] == {"voltage": 12.0, "current": 3.0, "power": 36.0}
+    assert result["HPWR_W1"] == {"voltage": 12.0, "current": 0.5, "power": 6.0}
+
+
+def test_translate_aggregate_power():
+    sensors = SensorStructPMD2X()
+    sensors.EpsPower = 50000
+    sensors.PciePower = 30000
+    sensors.MbPower = 20000
+    sensors.TotalPower = 60000
+
+    result = translate_aggregate_power(sensors)
+
+    assert result == {"eps": 50.0, "pcie": 30.0, "mb": 20.0, "total": 60.0}
+
+
+def test_translate_chip_sensors():
+    sensors = SensorStructPMD2X()
+    sensors.Vdd = 3300
+    sensors.Tchip = 420  # tenths of a degree -> 42.0 C
+
+    result = translate_chip_sensors(sensors)
+
+    assert result == {"vdd": 3.3, "tchip": 42.0}
+
+
+def test_translate_hpwr_temperatures():
+    sensors = SensorStructPMD2X()
+    sensors.Ts[PMD2X_TS_IN] = 350  # tenths of a degree -> 35.0 C
+    sensors.Ts[PMD2X_TS_OUT] = PMD2X_TS_NOT_CONNECTED
+
+    result = translate_hpwr_temperatures(sensors)
+
+    assert result == {"ts_in": 35.0, "ts_out": None}

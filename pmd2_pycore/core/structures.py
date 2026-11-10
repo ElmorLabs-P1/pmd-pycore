@@ -38,6 +38,11 @@ class PMD_CMD(IntEnum):
         return self.value.to_bytes(1, byteorder="little")
 
 
+PMD2X_TS_IN = 0   # 12VHPWR connector temperature sensor, cable side
+PMD2X_TS_OUT = 1  # 12VHPWR connector temperature sensor, PSU/device side
+PMD2X_TS_NOT_CONNECTED = 0x7FFF
+
+
 class VendorDataStruct(Structure):
     _pack_ = 1
     _fields_ = [
