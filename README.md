@@ -68,8 +68,17 @@ print(readings["EPS1"])  # {'voltage': 12.0, 'current': 1.0, 'power': 12.0}
 ```
 
 Implemented: `CMD_WELCOME` (`read_pmdusb_welcome_string`), `CMD_READ_ID` (`read_pmdusb_id`), and
-`CMD_READ_SENSOR_VALUES` (`read_pmdusb_sensors`, the plain-scaled reading -- not `CMD_READ_ADC`'s
-raw 12-bit path, which needs calibration offsets this library doesn't read).
+`CMD_READ_SENSOR_VALUES` (`read_pmdusb_sensors`/`translate_pmdusb_sensors`). This command already
+returns calibrated readings -- confirmed against the official PMD-USB GUI app's source, which
+uses it directly with no client-side calibration math -- so `CMD_READ_ADC`'s raw path isn't
+needed. `translate_pmdusb_aggregate_power` adds GPU/CPU/Total power (PCIE1+PCIE2 /  EPS1+EPS2 /
+sum), computed client-side the same way the official app does; PMD-USB's firmware doesn't
+compute these on-device the way PMD2/PMD2X's does.
+
+Note: PMD-USB has no per-unit UID/serial number anywhere -- not in the UART protocol (no command
+for it), and not at the USB level (the CH340 chip's serial number field reads empty on the
+device tested here). If you have more than one, there's no way to tell them apart besides which
+COM port they land on.
 
 See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) for what's deliberately out of scope and why.
 

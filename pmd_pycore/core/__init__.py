@@ -42,7 +42,7 @@ from .pmdusb_serial_io import (
     read_pmdusb_id,
     read_pmdusb_sensors,
 )
-from .pmdusb_sensor_translation import translate_pmdusb_sensors
+from .pmdusb_sensor_translation import translate_pmdusb_sensors, translate_pmdusb_aggregate_power
 from .pmdusb_structures import (
     PMDUSBIdStruct,
     PMDUSBChannelValues,
@@ -96,6 +96,7 @@ __all__ = [
     "read_pmdusb_sensors",
     # pmdusb_sensor_translation
     "translate_pmdusb_sensors",
+    "translate_pmdusb_aggregate_power",
     # pmdusb_structures
     "PMDUSBIdStruct",
     "PMDUSBChannelValues",

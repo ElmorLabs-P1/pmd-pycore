@@ -63,24 +63,35 @@ PMD2X unit's `FwVersion: 0x0` discussed above -- they're different product
 variants with independent version counters, not sequential revisions of the
 same thing.
 
-## PMD-USB: no firmware source, raw-ADC/calibration path unimplemented
+## PMD-USB: no firmware source, config writing and raw-ADC path unimplemented
 
 Unlike PMD2/PMD2X, there is no public PMD-USB firmware source to check
 against. This was ported from and verified against reference
 implementations -- [PMDLogger](https://github.com/ElmorLabs/PMDLogger)'s C#
-`PMD_USB_Device.cs`, and the Python sample scripts
+`PMD_USB_Device.cs`, the official [PMD-USB](https://github.com/ElmorLabs/PMD-USB)
+GUI app's `FormPMD.cs`, and the Python sample scripts
 [pmd-usb-serial-interface-fast](https://github.com/ElmorLabs/pmd-usb-serial-interface-fast)
 and [elmorlabs-pmd-usb-serial-interface](https://github.com/bjorntas/elmorlabs-pmd-usb-serial-interface)
--- plus a real device: identity (`CMD_WELCOME`/`CMD_READ_ID`) and
-`CMD_READ_SENSOR_VALUES`'s plain `int16*0.01V`/`*0.1A` scaling both decode
-correctly (idle readings ~0.17V/0A, consistent with a board not wired into
-a live PSU rail).
+-- plus a real device: identity (`CMD_WELCOME`/`CMD_READ_ID`),
+`CMD_READ_SENSOR_VALUES`'s plain `int16*0.01V`/`*0.1A` scaling, and
+`CMD_READ_CONFIG`'s 34-byte `ConfigStructV5` layout (firmware >= 6) all
+decode correctly against a live device.
 
-`CMD_READ_ADC` -- the raw 12-bit ADC path with per-channel calibration
-offsets, used for PMD-USB's higher-speed continuous-TX mode -- is not
-implemented. It needs `CMD_READ_CONFIG`'s calibration struct to produce
-calibrated readings, which (like PMD2's `CMD_READ_CONFIG`) hasn't been
-pinned down here.
+`CMD_READ_SENSOR_VALUES` already returns calibrated readings -- confirmed
+by `FormPMD.cs`'s live monitoring loop, which calls it directly with no
+client-side offset/gain correction. So there's no separate calibration gap
+for sensor reading the way there briefly seemed to be. `CMD_READ_ADC` (the
+raw, uncalibrated 12-bit path PMD-USB's higher-speed continuous-TX mode
+uses) and `CMD_WRITE_CONFIG`/device settings management are both out of
+scope -- read-only telemetry is covered, config writing and the raw-ADC
+path are not.
+
+There is no per-unit UID/UUID anywhere for PMD-USB: no UART command for
+one (confirmed against `FormPMD.cs`'s full command enum and by probing
+unused command bytes 9-19 against a live device -- all silently ignored),
+and the CH340 chip's USB serial-number field reads empty on the device
+tested here. Unlike PMD2/PMD2X's `CMD_READ_UID`, there's no way to tell two
+PMD-USB units apart besides which COM port they happen to land on.
 
 `PMDLogger` also has a `PMD_Device.cs` for an original PMD variant that
 connects over I2C via an EVC2 USB-to-I2C bridge rather than USB-serial --

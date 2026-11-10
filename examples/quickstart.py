@@ -24,6 +24,7 @@ from pmd_pycore.core import (
     read_pmdusb_id,
     read_pmdusb_sensors,
     translate_pmdusb_sensors,
+    translate_pmdusb_aggregate_power,
 )
 
 PRODUCT_NAMES = {PMD2_PRODUCT_ID: "PMD2", PMD2X_PRODUCT_ID: "PMD2X"}
@@ -148,6 +149,12 @@ def run_pmdusb(port: str) -> None:
             raise SystemExit("Failed to read sensor values.")
 
         print_rail_readings(translate_pmdusb_sensors(sensors))
+
+        aggregates = translate_pmdusb_aggregate_power(sensors)
+        print("--- Aggregate power ---")
+        print(f'GPU (PCIE1+2):   {aggregates["gpu"]:>8.3f} W')
+        print(f'CPU (EPS1+2):    {aggregates["cpu"]:>8.3f} W')
+        print(f'Total:           {aggregates["total"]:>8.3f} W')
     finally:
         ser.close()
 

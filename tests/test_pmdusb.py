@@ -10,6 +10,7 @@ from pmd_pycore.core import (
     read_pmdusb_id,
     read_pmdusb_sensors,
     translate_pmdusb_sensors,
+    translate_pmdusb_aggregate_power,
     PMDUSBIdStruct,
     SensorValuesPMDUSB,
     PMDUSB_CMD,
@@ -25,6 +26,7 @@ def test_imports():
     assert callable(read_pmdusb_id)
     assert callable(read_pmdusb_sensors)
     assert callable(translate_pmdusb_sensors)
+    assert callable(translate_pmdusb_aggregate_power)
 
     assert isinstance(PMDUSBIdStruct(), Structure)
     assert isinstance(SensorValuesPMDUSB(), Structure)
@@ -95,3 +97,19 @@ def test_translate_pmdusb_sensors():
 
     assert result["PCIE1"] == {"voltage": 12.0, "current": 5.0, "power": 60.0}
     assert set(result.keys()) == {"PCIE1", "PCIE2", "EPS1", "EPS2"}
+
+
+def test_translate_pmdusb_aggregate_power():
+    sensors = SensorValuesPMDUSB()
+    sensors.Channels[0].Voltage = 1200  # PCIE1: 12.0 V
+    sensors.Channels[0].Current = 10    # 1.0 A -> 12.0 W
+    sensors.Channels[1].Voltage = 1200  # PCIE2: 12.0 V
+    sensors.Channels[1].Current = 10    # 1.0 A -> 12.0 W
+    sensors.Channels[2].Voltage = 1200  # EPS1: 12.0 V
+    sensors.Channels[2].Current = 20    # 2.0 A -> 24.0 W
+    sensors.Channels[3].Voltage = 1200  # EPS2: 12.0 V
+    sensors.Channels[3].Current = 0     # 0.0 A -> 0.0 W
+
+    result = translate_pmdusb_aggregate_power(sensors)
+
+    assert result == {"gpu": 24.0, "cpu": 24.0, "total": 48.0}

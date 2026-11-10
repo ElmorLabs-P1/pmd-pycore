@@ -21,6 +21,7 @@ from pmd_pycore.core import (
     read_pmdusb_id,
     read_pmdusb_sensors,
     translate_pmdusb_sensors,
+    translate_pmdusb_aggregate_power,
 )
 
 # Number of sensor reads averaged into each displayed update.
@@ -157,6 +158,7 @@ def run_pmdusb(port):
         while True:
             cycle_start = time.monotonic()
             channel_samples = []
+            aggregate_samples = []
 
             for _ in range(NUM_SAMPLES):
                 sensors = None
@@ -166,6 +168,7 @@ def run_pmdusb(port):
                     except serial.SerialException:
                         time.sleep(0.1)
                 channel_samples.append(translate_pmdusb_sensors(sensors))
+                aggregate_samples.append(translate_pmdusb_aggregate_power(sensors))
 
             channel_names = channel_samples[0].keys()
             averaged_channels = {
@@ -174,8 +177,13 @@ def run_pmdusb(port):
                 )
                 for channel in channel_names
             }
+            averaged_aggregates = _average_dicts(aggregate_samples, ("gpu", "cpu", "total"))
 
             lines = _rail_lines(averaged_channels)
+            lines.append("--- Aggregate power ---")
+            lines.append(f'GPU (PCIE1+2):   {averaged_aggregates["gpu"]:>8.3f} W')
+            lines.append(f'CPU (EPS1+2):    {averaged_aggregates["cpu"]:>8.3f} W')
+            lines.append(f'Total:           {averaged_aggregates["total"]:>8.3f} W')
             print(CLEAR_SCREEN + "\n".join(lines), flush=True)
 
             elapsed = time.monotonic() - cycle_start
