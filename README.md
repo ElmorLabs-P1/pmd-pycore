@@ -47,6 +47,8 @@ See:
   temperatures) a single time.
 - `examples/read_sensors.py` — a polling/averaging loop that mirrors the original sample script.
 
+See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) for what's deliberately out of scope and why.
+
 ## Status
 
 This repository is under active development at
