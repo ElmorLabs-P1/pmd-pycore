@@ -52,6 +52,27 @@ jobs:
           name: dist
           path: dist/
 
+  publish-pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # Uses PyPI Trusted Publishing (OIDC) -- no stored secret needed, but the
+    # "pypi" environment must exist and be linked to this repo/workflow on
+    # PyPI's side (Account Settings > Publishing) before this job can
+    # succeed. Until that's set up, this job fails/waits here without
+    # blocking github-release below, which is a sibling job (both depend
+    # only on build, not on each other).
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
   github-release:
     name: Create GitHub Release
     needs: build

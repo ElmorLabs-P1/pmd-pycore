@@ -105,6 +105,11 @@ This repository is under active development at
 readable-unit translation for the supported devices), a test suite, and CI for tests and tagged
 releases.
 
+Tagged releases build an sdist/wheel and attach them to a GitHub Release. A PyPI-publish job is
+wired into the release workflow but not yet active -- it needs PyPI Trusted Publishing configured
+for this repo first (no credentials are stored in GitHub either way). Until that's set up,
+install from the GitHub Release assets or `pip install -e .` from a checkout.
+
 ## Related repositories
 
 - [PMD2-FW (pmd2x branch)](https://github.com/ElmorLabs/PMD2-FW/tree/pmd2x) — PMD2X firmware,
