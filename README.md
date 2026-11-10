@@ -4,17 +4,14 @@ Python interface for ElmorLabs PMD power measurement devices (PMD2, PMD2X, PMD-U
 
 ## Supported devices
 
-- **[PMD2X](https://elmorlabs.com/product/elmorlabs-pmd2x-power-measurement-device-2x/)**
-  (current product) -- measures voltage/current/power on CPU, GPU, and motherboard power
-  cables: 2x EPS, 3x PCIe, 1x ATX24, plus per-wire monitoring on a 12VHPWR (PCIe 5.0/ATX 3.0)
-  connector. OLED display, USB-C to a PC for logging. STM32 USB-serial interface.
-- **[PMD2](https://elmorlabs.com/product/elmorlabs-pmd2/)** *(discontinued, superseded by
-  PMD2X)* -- the non-X predecessor: same EPS/PCIe/ATX24 rail set and 12VHPWR connector, without
-  the per-wire 12VHPWR breakdown or the connector thermistors PMD2X added. Same USB-serial
-  interface.
-- **[PMD-USB](https://elmorlabs.com/product/elmorlabs-pmd-usb-power-measurement-device-with-usb/)**
-  *(discontinued, superseded by PMD2X)* -- an older, simpler device: 4 channels (PCIE1, PCIE2,
-  EPS1, EPS2) over a CH340 USB-serial bridge, no motherboard/ATX24 rail or 12VHPWR monitoring.
+| [PMD-USB](https://elmorlabs.com/product/elmorlabs-pmd-usb-power-measurement-device-with-usb/) *(discontinued)* | [PMD2](https://elmorlabs.com/product/elmorlabs-pmd2/) *(discontinued)* | [PMD2X](https://elmorlabs.com/product/elmorlabs-pmd2x-power-measurement-device-2x/) *(current)* |
+|:---:|:---:|:---:|
+| <img src="https://elmorlabs.com/wp-content/uploads/2022/05/with_case-scaled.jpg" width="220"> | <img src="https://elmorlabs.com/wp-content/uploads/2024/10/IMG_0216-scaled.jpg" width="220"> | <img src="https://elmorlabs.com/wp-content/uploads/2026/05/IMG_7900-scaled.jpg" width="220"> |
+| 4 channels (PCIE1, PCIE2, EPS1, EPS2) over a CH340 USB-serial bridge. No ATX24/motherboard rail, no 12VHPWR. | 2x EPS, 3x PCIe, 1x ATX24, 1x 12VHPWR connector. STM32 USB-serial interface. Superseded by PMD2X. | Same rail set as PMD2, plus per-wire 12VHPWR monitoring and connector thermistors. |
+
+PMD-USB was superseded by PMD2, which was in turn superseded by PMD2X -- the only one of the
+three still sold. All three measure voltage/current/power on CPU, GPU, and (PMD2/PMD2X only)
+motherboard power cables, with an OLED display and USB connection to a PC for logging.
 
 ## Pre-requisites
 - Python >= 3.11, with pyserial (and numpy for the example scripts)
