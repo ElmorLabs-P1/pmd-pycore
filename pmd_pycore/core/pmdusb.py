@@ -28,7 +28,7 @@ import time
 import logging
 import serial
 import serial.tools.list_ports
-from ctypes import Structure, c_uint8, c_int16, sizeof
+from ctypes import LittleEndianStructure, c_uint8, c_int16, sizeof
 from enum import IntEnum
 from typing import List, Dict, Optional
 
@@ -73,7 +73,7 @@ class PMDUSB_CMD(IntEnum):
         return self.value.to_bytes(1, byteorder="little")
 
 
-class PMDUSBIdStruct(Structure):
+class PMDUSBIdStruct(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ("VendorId", c_uint8),
@@ -89,7 +89,7 @@ class PMDUSBIdStruct(Structure):
         )
 
 
-class PMDUSBChannelValues(Structure):
+class PMDUSBChannelValues(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ("Voltage", c_int16),
@@ -97,7 +97,7 @@ class PMDUSBChannelValues(Structure):
     ]
 
 
-class PMDUSBSensorStruct(Structure):
+class PMDUSBSensorStruct(LittleEndianStructure):
     """CMD_READ_SENSOR_VALUES reply: 4 channels x {Voltage, Current}, 16 bytes total.
 
     Voltage is raw*0.01 V, current is raw*0.1 A -- plain signed int16.

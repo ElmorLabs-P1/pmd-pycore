@@ -19,7 +19,7 @@ import time
 import logging
 import serial
 import serial.tools.list_ports
-from ctypes import Structure, c_uint8, c_int16, c_int32, c_uint16, sizeof
+from ctypes import LittleEndianStructure, c_uint8, c_int16, c_int32, c_uint16, sizeof
 from enum import IntEnum
 from typing import List, Dict, Optional, Union
 
@@ -76,7 +76,7 @@ class PMD2_CMD(IntEnum):
         return self.value.to_bytes(1, byteorder="little")
 
 
-class PMD2VendorDataStruct(Structure):
+class PMD2VendorDataStruct(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ("VendorId", c_uint8),
@@ -92,7 +92,7 @@ class PMD2VendorDataStruct(Structure):
         )
 
 
-class PMD2PowerSensor(Structure):
+class PMD2PowerSensor(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ("Voltage", c_int16),
@@ -104,7 +104,7 @@ class PMD2PowerSensor(Structure):
         return f"Voltage: {self.Voltage}, Current: {self.Current}, Power: {self.Power}"
 
 
-class PMD2SensorStruct(Structure):
+class PMD2SensorStruct(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ("Vdd", c_uint16),
@@ -118,7 +118,7 @@ class PMD2SensorStruct(Structure):
     ]
 
 
-class PMD2XSensorStruct(Structure):
+class PMD2XSensorStruct(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
         ("Vdd", c_uint16),
