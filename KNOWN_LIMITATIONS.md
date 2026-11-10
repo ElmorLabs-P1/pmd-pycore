@@ -98,7 +98,7 @@ connects over I2C via an EVC2 USB-to-I2C bridge rather than USB-serial --
 a different physical interface entirely, not something `pyserial` can talk
 to and out of scope for this library.
 
-## Linux support: code-reviewed, not hardware-tested
+## Linux/ARM support: code-reviewed, not hardware-tested
 
 Nothing in `pmd_pycore` is Windows-specific: port discovery uses
 `serial.tools.list_ports.comports()` and checks `p.hwid` for
@@ -109,10 +109,27 @@ passed straight to `serial.Serial()`, with no `COMx`-shaped parsing
 anywhere. `rtscts`/`dsrdtr`/`.dtr` are standard pyserial attributes backed
 by termios on POSIX, not Windows-only workarounds.
 
-That said, this has only been reviewed, not run against real hardware on
-Linux -- all verification in this repo so far has been on Windows. If you
-hit something that doesn't work on Linux, it's worth filing, not assuming
-away.
+All wire-format structs (`PMD2SensorStruct`, `PMDUSBSensorStruct`, etc.)
+use fixed-width `ctypes` types (`c_uint8`/`c_int16`/`c_uint16`/`c_int32`)
+with `_pack_ = 1`, so field sizes and layout don't depend on the host
+architecture's native int width or struct alignment -- this part is
+portable to any CPU architecture, including ARM. They now also inherit
+from `ctypes.LittleEndianStructure` rather than plain `Structure`:
+plain `Structure` decodes multi-byte fields using the host's *native*
+byte order, which is correct by coincidence on x86/x86-64 and virtually
+all ARM Linux systems (little-endian by default) but would have silently
+misdecoded every multi-byte field on a big-endian host, since the wire
+protocol itself is little-endian (both an STM32 and a CH340-attached MCU
+are little-endian devices). `LittleEndianStructure` makes this correct
+regardless of host byte order instead of merely working on common
+architectures today.
+
+With that fixed, there's no architecture-specific reason this shouldn't
+work on Linux/ARM (e.g. a Raspberry Pi) the same as x86-64 Linux or
+Windows. That said, this has only been code-reviewed, not run against
+real hardware on Linux or ARM -- all hardware verification in this repo
+so far has been on x86-64 Windows. If you hit something that doesn't
+work, it's worth filing, not assuming away.
 
 ## Examples only talk to one device at a time
 
