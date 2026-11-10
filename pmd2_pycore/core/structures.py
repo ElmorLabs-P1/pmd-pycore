@@ -19,19 +19,23 @@ PMD2X_SENSOR_TS_NUM = 2
 
 
 class PMD_CMD(IntEnum):
+    """USB_CMD, per PMD2-FW's pmd2.h (https://github.com/ElmorLabs/PMD2-FW/blob/pmd2x/Core/Inc/pmd2.h).
+
+    CMD_READ_DEVICE_DATA is declared there but has no case in the device's
+    CDC_Receive_FS dispatch (usbd_cdc_if.c) -- sending it is a no-op.
+    """
+
     CMD_WELCOME = 0
     CMD_READ_VENDOR_DATA = 1
     CMD_READ_UID = 2
     CMD_READ_DEVICE_DATA = 3
     CMD_READ_SENSOR_VALUES = 4
     CMD_WRITE_CONT_TX = 5
-    CMD_READ_CALIBRATION = 6
-    CMD_WRITE_CALIBRATION = 7
-    CMD_LOAD_CALIBRATION = 8
-    CMD_STORE_CALIBRATION = 9
+    CMD_READ_CONFIG = 6
+    CMD_WRITE_CONFIG = 7
     CMD_RESET = 0xF0
     CMD_BOOTLOADER = 0xF1
-    CMD_NVM_CONFIG = 0xF2
+    CMD_MCU_CMD = 0xF2
     CMD_NOP = 0xFF
 
     def toByte(self) -> bytes:

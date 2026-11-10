@@ -4,7 +4,9 @@ from .serial_io import (
     get_pmd_ports,
     find_pmd_devices,
     read_uart,
+    read_welcome_string,
     read_device,
+    read_uid,
     read_sensors,
 )
 from .sensor_translation import (
@@ -39,7 +41,9 @@ __all__ = [
     "get_pmd_ports",
     "find_pmd_devices",
     "read_uart",
+    "read_welcome_string",
     "read_device",
+    "read_uid",
     "read_sensors",
     # sensor_translation
     "translate_sensor_struct",

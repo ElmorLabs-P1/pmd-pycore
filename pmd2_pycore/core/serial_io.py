@@ -48,7 +48,14 @@ if not logger.handlers:
 _PMD_VID_PID = "VID:PID=0483:5740"
 
 # Longest welcome string a device can push on connect.
-_WELCOME_MAX_LEN = max(len(PMD2_PRODUCT_STRING), len(PMD2X_PRODUCT_STRING)) + 1
+_WELCOME_PUSH_MAX_LEN = max(len(PMD2_PRODUCT_STRING), len(PMD2X_PRODUCT_STRING)) + 1
+
+# CMD_WELCOME replies with BuildData.ProductName truncated to 15 bytes
+# (CDC_Transmit_FS((void*)BuildData.ProductName, 15) in usbd_cdc_if.c) --
+# a fixed size independent of the unsolicited DTR-triggered push above.
+_WELCOME_REPLY_LEN = 15
+
+_UID_LEN = 12
 
 
 # --- Serial port helpers ---
@@ -72,9 +79,9 @@ def get_pmd_ports() -> List[Dict[str, str]]:
     return pmd_ports
 
 
-def _drain_welcome_string(ser: serial.Serial) -> Optional[str]:
-    """Read and decode the welcome string a device pushes after DTR is asserted."""
-    buffer = ser.read(_WELCOME_MAX_LEN)
+def _drain_welcome_push(ser: serial.Serial) -> Optional[str]:
+    """Read and decode the unsolicited welcome string a device pushes after DTR is asserted."""
+    buffer = ser.read(_WELCOME_PUSH_MAX_LEN)
     try:
         return buffer.decode("ascii").rstrip("\x00")
     except UnicodeDecodeError:
@@ -97,7 +104,7 @@ def find_pmd_devices() -> List[Dict[str, str]]:
         try:
             with serial.Serial(port, 115200, timeout=1, rtscts=False, dsrdtr=False) as ser:
                 ser.dtr = True
-                _drain_welcome_string(ser)
+                _drain_welcome_push(ser)
                 device_info = read_device(ser)
                 if device_info:
                     product_id = device_info["ProductId"]
@@ -153,6 +160,34 @@ def read_device(ser: serial.Serial) -> Optional[Dict[str, int]]:
         "ProductId": vendor_struct.ProductId,
         "FwVersion": vendor_struct.FwVersion,
     }
+
+
+def read_welcome_string(ser: serial.Serial) -> Optional[str]:
+    """Send CMD_WELCOME and return the device's product name.
+
+    Returns:
+        Optional[str]: Decoded product name, or None if the read failed.
+    """
+    buffer = read_uart(ser, PMD_CMD.CMD_WELCOME, _WELCOME_REPLY_LEN)
+    if buffer is None:
+        return None
+    try:
+        return buffer.decode("ascii").rstrip("\x00")
+    except UnicodeDecodeError:
+        logger.warning("Failed to decode welcome string: %r", buffer)
+        return None
+
+
+def read_uid(ser: serial.Serial) -> Optional[str]:
+    """Read the device's unique ID (the STM32's hardware UID).
+
+    Returns:
+        Optional[str]: UID as an uppercase hex string, or None if the read failed.
+    """
+    buffer = read_uart(ser, PMD_CMD.CMD_READ_UID, _UID_LEN)
+    if buffer is None:
+        return None
+    return buffer.hex().upper()
 
 
 def read_sensors(

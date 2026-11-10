@@ -7,7 +7,9 @@ from pmd2_pycore.core import (
     get_pmd_ports,
     find_pmd_devices,
     read_uart,
+    read_welcome_string,
     read_device,
+    read_uid,
     read_sensors,
     translate_sensor_struct,
     translate_aggregate_power,
@@ -34,7 +36,9 @@ def test_imports():
     assert callable(get_pmd_ports)
     assert callable(find_pmd_devices)
     assert callable(read_uart)
+    assert callable(read_welcome_string)
     assert callable(read_device)
+    assert callable(read_uid)
     assert callable(read_sensors)
     assert callable(translate_sensor_struct)
     assert callable(translate_aggregate_power)
@@ -108,6 +112,40 @@ def test_read_device_wrong_vendor_returns_none():
     ser.read.return_value = bytes(vendor_struct)
 
     assert read_device(ser) is None
+
+
+# -----------------------
+# Test read_welcome_string
+# -----------------------
+def test_read_welcome_string():
+    ser = MagicMock()
+    ser.read.return_value = b"ElmorLabs PMD2X"
+
+    assert read_welcome_string(ser) == "ElmorLabs PMD2X"
+
+
+def test_read_welcome_string_incomplete_returns_none():
+    ser = MagicMock()
+    ser.read.return_value = b"short"
+
+    assert read_welcome_string(ser) is None
+
+
+# -----------------------
+# Test read_uid
+# -----------------------
+def test_read_uid():
+    ser = MagicMock()
+    ser.read.return_value = bytes.fromhex("32001e000c53545637303120")
+
+    assert read_uid(ser) == "32001E000C53545637303120"
+
+
+def test_read_uid_incomplete_returns_none():
+    ser = MagicMock()
+    ser.read.return_value = b"\x01\x02"
+
+    assert read_uid(ser) is None
 
 
 # -----------------------
