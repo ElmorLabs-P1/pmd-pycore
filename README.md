@@ -119,11 +119,12 @@ install from the GitHub Release assets or `pip install -e .` from a checkout.
 
 ## Related repositories
 
-- [PMD2-FW (pmd2x branch)](https://github.com/ElmorLabs/PMD2-FW/tree/pmd2x) — PMD2X firmware,
-  useful reference for the UART command set and sensor data structures used here.
 - [PMDLogger](https://github.com/ElmorLabs/PMDLogger) — C# reference implementation for PMD-USB
   (there's no public PMD-USB firmware source); `PMD_USB_Device.cs` has the command set and sensor
   scaling used here.
+- [PMD-USB](https://github.com/ElmorLabs/PMD-USB) — the official PMD-USB GUI app; `FormPMD.cs`
+  confirmed `CMD_READ_SENSOR_VALUES` is already calibrated and has the `CMD_READ_CONFIG` struct
+  layout.
 - [pmd-usb-serial-interface-fast](https://github.com/ElmorLabs/pmd-usb-serial-interface-fast) /
   [elmorlabs-pmd-usb-serial-interface](https://github.com/bjorntas/elmorlabs-pmd-usb-serial-interface) —
   Python sample scripts for PMD-USB, cross-checked against PMDLogger and a real device.

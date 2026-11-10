@@ -7,10 +7,8 @@ from commit history.
 
 `pmd_pycore` implements `CMD_WELCOME`, `CMD_READ_VENDOR_DATA`, `CMD_READ_UID`,
 and `CMD_READ_SENSOR_VALUES` -- the device's read-only telemetry commands.
-Per [PMD2-FW's `pmd2.h`](https://github.com/ElmorLabs/PMD2-FW/blob/pmd2x/Core/Inc/pmd2.h)
-and its USB command dispatch
-([`usbd_cdc_if.c`](https://github.com/ElmorLabs/PMD2-FW/blob/pmd2x/USB_DEVICE/App/usbd_cdc_if.c)),
-the full command set also includes:
+Per PMD2-FW's `pmd2.h` (private repo) and its USB command dispatch
+(`usbd_cdc_if.c`), the full command set also includes:
 
 - `CMD_READ_DEVICE_DATA` (3) -- declared in the firmware's `USB_CMD` enum but
   has no `case` in the device's dispatch switch. Sending it is a no-op on

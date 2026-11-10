@@ -53,7 +53,7 @@ PMD2X_TS_NOT_CONNECTED = 0x7FFF
 
 
 class PMD2_CMD(IntEnum):
-    """USB_CMD, per PMD2-FW's pmd2.h (https://github.com/ElmorLabs/PMD2-FW/blob/pmd2x/Core/Inc/pmd2.h).
+    """USB_CMD, per PMD2-FW's pmd2.h (private repo).
 
     CMD_READ_DEVICE_DATA is declared there but has no case in the device's
     CDC_Receive_FS dispatch (usbd_cdc_if.c) -- sending it is a no-op.
@@ -308,7 +308,7 @@ def read_pmd2_sensors(
 # --- Sensor translation ---
 
 # Channel index -> rail name, for each product. Matches SENSOR_POWER_* in
-# the PMD2-FW pmd2.h header (https://github.com/ElmorLabs/PMD2-FW/blob/pmd2x/Core/Inc/pmd2.h).
+# the PMD2-FW pmd2.h header (private repo).
 # Index 4 ("HPWR"/"HPWR1") is computed by the firmware itself from the six
 # wire channels (10-15) -- it isn't something the host needs to average.
 PMD2_CHANNELS = {
